@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
+import {TestSvgComponent} from './graph'
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
@@ -46,6 +47,14 @@ function CustomLink(props) {
 
 function RoundedImage(props) {
   return <Image alt={props.alt} className="rounded-lg" {...props} />
+}
+
+function Thing() {
+  return (
+    <div className="bg-neutral-100 dark:bg-neutral-800 p-4 rounded-lg my-4 border border-neutral-200 dark:border-neutral-700">
+      <p className="text-sm font-medium m-0">This is a custom MDX component!</p>
+    </div>
+  )
 }
 
 function Code({ children, ...props }) {
@@ -97,6 +106,8 @@ let components = {
   a: CustomLink,
   code: Code,
   Table,
+  Thing,
+  TestSvgComponent,
 }
 
 export function CustomMDX(props) {
