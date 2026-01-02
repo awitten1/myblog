@@ -3,8 +3,8 @@ import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
-import {TestSvgComponent} from './client/graph'
-import { DrawSvgLine } from './plots'
+import {TestSvgComponent} from '../client/graph'
+import { DrawSvgLine } from '../plots'
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
