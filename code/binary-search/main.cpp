@@ -37,9 +37,14 @@ static void BM_LinearSearch(benchmark::State& state) {
     state.SetComplexityN(N);
 }
 
-const long start_dense = 1 << 8;
+const long end_dense = 1 << 11;
+const long end_range = 1 << 18;
 
-BENCHMARK(BM_LinearSearch)->DenseRange(8,1<<12,1<<6)->Complexity();
-BENCHMARK(BM_BinarySearch)->DenseRange(8,1<<12,1<<6)->Complexity();
+BENCHMARK(BM_LinearSearch)->DenseRange(8,end_dense,1<<7)
+    ->RangeMultiplier(2)->Range(end_dense, end_range)
+    ->Complexity();
+BENCHMARK(BM_BinarySearch)->DenseRange(8,end_dense,1<<7)
+    ->RangeMultiplier(2)->Range(end_dense, end_range)
+    ->Complexity();
 
 BENCHMARK_MAIN();
