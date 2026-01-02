@@ -37,7 +37,7 @@ static void BM_LinearSearch(benchmark::State& state) {
     state.SetComplexityN(N);
 }
 
-const long start_dense = 1 << 12;
+const long start_dense = 1 << 8;
 
 BENCHMARK(BM_LinearSearch)->DenseRange(start_dense, 1<<18,1<<13)
     ->RangeMultiplier(2)->Range(8, start_dense)->Complexity();
