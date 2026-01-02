@@ -16,8 +16,15 @@ function greet(name: string): string {
 }
 ```
 
+Two 🍰 is: {Math.PI * 2}
+
+
 <Thing />
 
-<TestSvgComponent/>
-<Plot/>
+{
+<TestSvgComponent width={900} height={600}>
+  <DrawSvgLine width={900} height={600} alg={'LinearSearch'} strokeColor={'green'}/>
+  <DrawSvgLine width={900} height={600} alg={'BinarySearch'} strokeColor={'white'}/>
+</TestSvgComponent>
+}
 

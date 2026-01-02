@@ -14,18 +14,19 @@ function range(start, end?: number, step = 1) {
   return ret;
 }
 
-export function TestSvgComponent() {
+export function TestSvgComponent({ children, height, width }) {
   const horizontalLineRef = useRef(null);
   const verticalLineRef = useRef(null);
+  console.log(children)
 
-  const width = 600
-  const height = 300
   const sep = 30
 
   console.log(10)
 
   return (
-    <>
+    <div style={{ display: 'flex', justifyContent: 'center', width: '100%',
+      flexDirection: 'column'
+    }}>
     <svg
       width={width}
       height={height}
@@ -58,16 +59,6 @@ export function TestSvgComponent() {
         ))}
       </g>
 
-      <rect
-        x="70"
-        y="100"
-        width="158"
-        height="100"
-        fill="none"
-        stroke="oklch(0.9 0.3 164)"
-        strokeWidth="5"
-      />
-
       <g stroke="oklch(0.9 0.3 50)" strokeWidth="2">
         {/* Vertical line */}
         <line
@@ -86,8 +77,9 @@ export function TestSvgComponent() {
           y2={0}
         />
       </g>
+      {children}
     </svg>
     <p>more text</p>
-    </>
+    </div>
   )
 }
