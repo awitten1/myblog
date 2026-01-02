@@ -39,9 +39,7 @@ static void BM_LinearSearch(benchmark::State& state) {
 
 const long start_dense = 1 << 8;
 
-BENCHMARK(BM_LinearSearch)->DenseRange(start_dense, 1<<18,1<<13)
-    ->RangeMultiplier(2)->Range(8, start_dense)->Complexity();
-BENCHMARK(BM_BinarySearch)->DenseRange(start_dense, 1<<18,1<<13)
-    ->RangeMultiplier(2)->Range(8, start_dense)->Complexity();
+BENCHMARK(BM_LinearSearch)->DenseRange(8,1<<12,1<<6)->Complexity();
+BENCHMARK(BM_BinarySearch)->DenseRange(8,1<<12,1<<6)->Complexity();
 
 BENCHMARK_MAIN();
