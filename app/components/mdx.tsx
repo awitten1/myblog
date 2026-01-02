@@ -3,7 +3,8 @@ import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
-import {TestSvgComponent} from './graph'
+import {TestSvgComponent} from './client/graph'
+import { Plot } from './plots'
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
@@ -108,6 +109,7 @@ let components = {
   Table,
   Thing,
   TestSvgComponent,
+  Plot,
 }
 
 export function CustomMDX(props) {
