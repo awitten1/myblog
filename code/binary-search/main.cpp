@@ -45,7 +45,8 @@ BENCHMARK(BM_LinearSearch)->DenseRange(8,end_dense_first,1<<5)
     ->DenseRange(end_dense_first,end_dense,1<<7)
     ->RangeMultiplier(2)->Range(end_dense, end_range)
     ->Complexity();
-BENCHMARK(BM_BinarySearch)->DenseRange(8,end_dense_first,1<<6)
+
+BENCHMARK(BM_BinarySearch)->DenseRange(8,end_dense_first,1<<5)
     ->DenseRange(end_dense_first,end_dense,1<<7)
     ->RangeMultiplier(2)->Range(end_dense, end_range)
     ->Complexity();
