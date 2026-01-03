@@ -5,6 +5,7 @@ import { highlight } from 'sugar-high'
 import React from 'react'
 import {TestSvgComponent} from '../client/graph'
 import { DrawSvgLine } from '../plots'
+import {Iframe} from '../iframe'
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
@@ -110,6 +111,7 @@ let components = {
   Thing,
   TestSvgComponent,
   DrawSvgLine,
+  Iframe,
 }
 
 export function CustomMDX(props) {

@@ -1,9 +1,11 @@
+import React from 'react'
 import { readFile } from "fs/promises"
 import { TestSvgComponent } from "./client/graph"
 import { DuckDBConnection } from '@duckdb/node-api';
 import * as d3 from "d3";
+import { InteractiveLine } from "./interactive_line"
 
-const ROOT_DIR = process.env.ROOT_DIR
+const ROOT_DIR = process.env.ROOT_DIR || process.cwd()
 
 export async function DrawSvgLine({
   height,
@@ -18,9 +20,10 @@ export async function DrawSvgLine({
 }) {
   const connection = await DuckDBConnection.create();
 
-
   function template_query(file: string) {
-    return `create or replace temp table results as select cycles,instructions,
+    return `create or replace temp table results as
+        select distinct on(name)
+          cycles,instructions,
           substr(name, position('_' in name)+1,
             position('/' in name)-position('_' in name)-1) as algorithm,
           substr(name,position('/' in name)+1,
@@ -34,9 +37,8 @@ export async function DrawSvgLine({
   await connection.run(query)
 
   let reader = await connection.runAndReadAll(`select max(input_size) max_input_size,
-      max(cycles) max_cycle_count from results`)
-  let {max_input_size,max_cycle_count} = reader.getRowObjects()[0];
-  console.log(max_cycle_count, max_input_size)
+    max(cycles) max_cycle_count from results`)
+  let { max_input_size, max_cycle_count } = reader.getRowObjects()[0];
 
   const x = d3.scaleLinear([0, max_input_size], [0, width]);
   const y = d3.scaleLinear([0, max_cycle_count], [0, height]);
@@ -46,37 +48,25 @@ export async function DrawSvgLine({
     where algorithm = '${alg}'
     order by input_size asc`);
   const rows = reader.getRowObjects();
-  console.log(rows)
 
-  let dstr = 'M ';
-  for (let i = 0; i < rows.length; i++) {
-    if (i > 0) {
-      dstr += ' L ';
-    }
-    dstr += `${x(rows[i].input_size)} ${height - y(rows[i].cycles)}`
-    console.log(dstr)
-    //dstr += `${rows[i].input_size} ${rows[i].cycles}`
-  }
-  console.log(`${alg} ${dstr}`)
+  const points = rows.map((row: any) => ({
+    x: x(row.input_size),
+    y: height - y(row.cycles),
+    input_size: row.input_size,
+    cycles: row.cycles
+  }));
+
+  const labelMap: Record<string, string> = {
+    'BinarySearch': 'Binary Search',
+    'LinearSearch': 'Linear Search'
+  };
 
   return (
-    <>
-      <path d={dstr} stroke={strokeColor} strokeWidth={1} fill={'none'}/>
-      {
-        (() => {
-          let ret = []
-          for (let i = 0; i < rows.length; i++) {
-            ret.push(
-              (
-                <circle key={i}
-                  cx={x(rows[i].input_size)}
-                  cy={height - y(rows[i].cycles)} r={2} fill={'white'}/>
-              )
-            )
-          }
-          return ret
-        })()
-      }
-    </>
+    <InteractiveLine
+      id={alg}
+      label={labelMap[alg] || alg}
+      points={points}
+      strokeColor={strokeColor}
+    />
   )
 }
