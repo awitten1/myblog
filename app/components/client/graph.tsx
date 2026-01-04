@@ -44,7 +44,7 @@ interface TestSvgProps {
   marginBottom?: number
 }
 
-export function Grid({ children, height, width, marginLeft = 0, marginBottom = 0 }: TestSvgProps) {
+export function TestSvgComponent({ children, height, width, marginLeft = 0, marginBottom = 0 }: TestSvgProps) {
   const horizontalLineRef = useRef<SVGLineElement>(null);
   const verticalLineRef = useRef<SVGLineElement>(null);
   const [activePoint, setActivePoint] = useState<Point | null>(null);
@@ -128,126 +128,132 @@ export function Grid({ children, height, width, marginLeft = 0, marginBottom = 0
   return (
     <GraphContext value={contextValue}>
       <div style={{
-        position: 'relative',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: `${width}px`,
-        marginBottom: '80px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%',
+        marginTop: '60px',
+        marginBottom: marginBottom ? `${marginBottom + 20}px` : '40px'
       }}>
-        {/* Legend */}
         <div style={{
-          position: 'absolute',
-          top: -30,
-          right: 0,
-          display: 'flex',
-          gap: '16px',
-          fontSize: '12px',
-          color: '#888'
+          position: 'relative',
+          width: `${width}px`,
         }}>
-          {Object.values(lines).map(line => (
-            <div key={line.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '12px', height: '2px', background: line.color }} />
-              <span>{line.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <svg
-          width={width}
-          height={height}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setActivePoint(null)}
-          style={{ cursor: 'crosshair', background: '#000', overflow: 'visible' }}
-        >
-          <g fill="white">
-            <rect width={width} height={height}></rect>
-          </g>
-
-          <g fill="white" stroke="#070707ff" strokeWidth="0.5">
-            {range(0, width, sep).map((i) => (
-              <line key={`v-${i}`} x1={i} y1={0} x2={i} y2={height}></line>
-            ))}
-
-            {range(0, height, sep).map((i) => (
-              <line key={`h-${i}`} x1={0} y1={i} x2={width} y2={i}></line>
-            ))}
-          </g>
-
-          <g stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" strokeDasharray="4 4">
-            <line ref={verticalLineRef} x1={0} y1={0} x2={0} y2={height} />
-            <line ref={horizontalLineRef} x1={0} y1={0} x2={width} y2={0} />
-          </g>
-
-          {children}
-
-          {/* Axes Labels */}
-          {marginBottom > 0 && (
-            <text
-              x={width / 2}
-              y={height + marginBottom - 10}
-              fill="#888"
-              textAnchor="middle"
-              fontSize="12"
-              style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
-            >
-              Input Size
-            </text>
-          )}
-
-          {marginLeft > 0 && (
-            <text
-              transform={`translate(${-marginLeft + 20}, ${height / 2}) rotate(-90)`}
-              fill="#888"
-              textAnchor="middle"
-              fontSize="12"
-              style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
-            >
-              Cycles
-            </text>
-          )}
-
-          {activePoint && (
-            <circle
-              cx={activePoint.x}
-              cy={activePoint.y}
-              r={6}
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2"
-            />
-          )}
-        </svg>
-
-        {activePoint && (
+          {/* Legend */}
           <div style={{
             position: 'absolute',
-            top: activePoint.y - 80,
-            left: activePoint.x + 20,
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(4px)',
-            color: 'white',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-            pointerEvents: 'none',
-            zIndex: 10,
+            top: -30,
+            right: 0,
             display: 'flex',
-            flexDirection: 'column',
-            gap: '4px'
+            gap: '16px',
+            fontSize: '12px',
+            color: '#888'
           }}>
-            <div style={{ opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '10px' }}>Performance Data</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
-              <span>Cycles:</span>
-              <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#10b981' }}>{activePoint.cycles.toLocaleString()}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
-              <span>Input Size:</span>
-              <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{activePoint.input_size}</span>
-            </div>
+            {Object.values(lines).map(line => (
+              <div key={line.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '2px', background: line.color }} />
+                <span>{line.label}</span>
+              </div>
+            ))}
           </div>
-        )}
+
+          <svg
+            width={width}
+            height={height}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setActivePoint(null)}
+            style={{ cursor: 'crosshair', background: '#000', overflow: 'visible' }}
+          >
+            <g fill="white">
+              <rect width={width} height={height}></rect>
+            </g>
+
+            <g fill="white" stroke="#070707ff" strokeWidth="0.5">
+              {range(0, width, sep).map((i) => (
+                <line key={`v-${i}`} x1={i} y1={0} x2={i} y2={height}></line>
+              ))}
+
+              {range(0, height, sep).map((i) => (
+                <line key={`h-${i}`} x1={0} y1={i} x2={width} y2={i}></line>
+              ))}
+            </g>
+
+            <g stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" strokeDasharray="4 4">
+              <line ref={verticalLineRef} x1={0} y1={0} x2={0} y2={height} />
+              <line ref={horizontalLineRef} x1={0} y1={0} x2={width} y2={0} />
+            </g>
+
+            {children}
+
+            {/* Axes Labels */}
+            {marginBottom > 0 && (
+              <text
+                x={width / 2}
+                y={height + marginBottom - 10}
+                fill="#888"
+                textAnchor="middle"
+                fontSize="12"
+                style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
+              >
+                Input Size
+              </text>
+            )}
+
+            {marginLeft > 0 && (
+              <text
+                transform={`translate(${-marginLeft + 20}, ${height / 2}) rotate(-90)`}
+                fill="#888"
+                textAnchor="middle"
+                fontSize="12"
+                style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
+              >
+                Cycles
+              </text>
+            )}
+
+            {activePoint && (
+              <circle
+                cx={activePoint.x}
+                cy={activePoint.y}
+                r={6}
+                fill="none"
+                stroke="#fff"
+                strokeWidth="2"
+              />
+            )}
+          </svg>
+
+          {activePoint && (
+            <div style={{
+              position: 'absolute',
+              top: activePoint.y - 80,
+              left: activePoint.x + 20,
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(4px)',
+              color: 'white',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              pointerEvents: 'none',
+              zIndex: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              <div style={{ opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '10px' }}>Performance Data</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+                <span>Cycles:</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#10b981' }}>{activePoint.cycles.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+                <span>Input Size:</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{activePoint.input_size}</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </GraphContext>
   )

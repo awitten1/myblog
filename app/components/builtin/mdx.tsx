@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
-import {Grid} from '../client/graph'
+import {TestSvgComponent} from '../client/graph'
 import { DrawSvgLine } from '../plots'
 import {Iframe} from '../iframe'
 
@@ -109,7 +109,7 @@ let components = {
   code: Code,
   Table,
   Thing,
-  Grid,
+  TestSvgComponent,
   DrawSvgLine,
   Iframe,
 }

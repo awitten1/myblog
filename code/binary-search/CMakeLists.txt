@@ -4,7 +4,6 @@ cmake_minimum_required(VERSION 3.24)
 project(BinSearch LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 17)
 
 
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/install_dir")

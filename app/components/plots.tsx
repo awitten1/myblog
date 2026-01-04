@@ -1,6 +1,6 @@
 import React from 'react'
 import { readFile } from "fs/promises"
-import { Grid } from "./client/graph"
+import { TestSvgComponent } from "./client/graph"
 import { DuckDBConnection } from '@duckdb/node-api';
 import * as d3 from "d3";
 import { InteractiveLine } from "./interactive_line"

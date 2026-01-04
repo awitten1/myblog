@@ -138,10 +138,6 @@ input[type='email'] {
   appearance: none;
 }
 
-:root {
-  box-sizing: border-box;
-}
-
 table {
   display: block;
   max-width: fit-content;
