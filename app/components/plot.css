@@ -20,7 +20,26 @@ svg {
 }
 
 .popup {
-  padding: 2px;
-  border: 1px black;
-  color: rgb(63, 152, 85);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #333;
+  pointer-events: none;
+  white-space: nowrap;
 }
+
+.popup-label {
+  margin: 2px 0;
+}
+
+.popup-label strong {
+  color: #000;
+  font-weight: 600;
+}
+

@@ -53,23 +53,23 @@ export interface ChartMetadata {
   yName: string;
 }
 
-function cantor(k1: number,k2: number): number {
-  return ((k1 + k2 + 1)*(k1 + k2) + k2)/2
+function cantor(k1: number, k2: number): number {
+  return ((k1 + k2 + 1) * (k1 + k2) + k2) / 2
 }
 
 export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
-  {lines: Line[], height: number, width: number, maxx: number, maxy: number, metadata: ChartMetadata}) {
+  { lines: Line[], height: number, width: number, maxx: number, maxy: number, metadata: ChartMetadata }) {
 
-  const [activePoint, setActivePoint] = useState<Point & {absoluteX: number, absoluteY: number}>(null)
+  const [activePoint, setActivePoint] = useState<(Point & { x_coord: number, y_coord: number }) | null>(null)
 
-  maxx*=1.1
-  maxy*=1.1
+  maxx *= 1.1
+  maxy *= 1.1
   for (let line of lines) {
     line.points.sort((a: Point, b: Point) => { return a.x - b.x; });
   }
 
-  const x = d3.scaleLinear([0,maxx], [0,width]);
-  const y = d3.scaleLinear([0,maxy], [0,height]);
+  const x = d3.scaleLinear([0, maxx], [0, width]);
+  const y = d3.scaleLinear([0, maxy], [0, height]);
 
   // let svgpaths: React.SVGPathElement = []
   let svgpaths = []
@@ -81,18 +81,18 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
       if (i > 0) {
         dstr += ' L '
       }
-      dstr += `${x(point.x)} ${height-y(point.y)}`
+      dstr += `${x(point.x)} ${height - y(point.y)}`
     }
     svgpaths.push(
       (
         <path fill="none" stroke={'black'}
-          className={line.className} key={j} d={dstr}/>
+          className={line.className} key={j} d={dstr} />
       )
     )
   }
 
   const pointRadius = 3;
-  const activePointRadius = pointRadius+7;
+  const activePointRadius = pointRadius + 7;
 
   let dots = []
   for (let j = 0; j < lines.length; j++) {
@@ -101,7 +101,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
       let point = line.points[i]
       dots.push(
         (
-          <circle key={`${cantor(i,j)}`} cx={x(point.x)} cy={height-y(point.y)} r={pointRadius}
+          <circle key={`${cantor(i, j)}`} cx={x(point.x)} cy={height - y(point.y)} r={pointRadius}
             fill="black"
             stroke={"black"} strokeWidth={3} />
         )
@@ -112,50 +112,57 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   let activePointJsx = activePoint && (
     <>
       <circle cx={x(activePoint.x)} cy={height - y(activePoint.y)} r={activePointRadius}
-      className={'activePoint'} />
+        className={'activePoint'} />
     </>
   )
 
   let activePointPopup = activePoint && (
-    <ul className={'popup'} style={{position: 'absolute', zIndex: 1000,
-      top: activePoint.absoluteY, left: activePoint.absoluteX}}>
-      <li>{`${metadata.xName}: ${activePoint.x}`}</li>
-      <li>{`${metadata.yName}: ${activePoint.y}`}</li>
-    </ul>
+    <div className={'popup'} style={{
+      position: 'absolute',
+      zIndex: 1000,
+      top: activePoint.y_coord - 10,
+      left: activePoint.x_coord + 10,
+      pointerEvents: 'none'
+    }}>
+      <div className="popup-label">{metadata.xName}: <strong>{activePoint.x}</strong></div>
+      <div className="popup-label">{metadata.yName}: <strong>{activePoint.y}</strong></div>
+    </div>
   )
 
   function handleMouseMove(event) {
     let dist = Infinity
     const mouseX = event.nativeEvent.offsetX
     const mouseY = event.nativeEvent.offsetY
-    let activePointCurr: Point & {absoluteX: number, absoluteY: number} | null = null
+    let activePointCurr: Point & { x_coord: number, y_coord: number } | null = null
     for (let line of lines) {
       for (let point of line.points) {
-        const currDist = Math.sqrt((mouseX - x(point.x))**2+(mouseY
-            - (height - y(point.y)))**2);
+        const pointX = x(point.x)
+        const pointY = height - y(point.y)
+        const currDist = Math.sqrt((mouseX - pointX) ** 2 + (mouseY - pointY) ** 2);
         if (currDist < dist && currDist < 80) {
-          activePointCurr = {x: point.x, y: point.y,
-              absoluteX: event.nativeEvent.pageX,
-              absoluteY: event.nativeEvent.pageY
+          activePointCurr = {
+            x: point.x,
+            y: point.y,
+            x_coord: pointX,
+            y_coord: pointY
           }
           dist = currDist
-          // console.log(activePointCurr)
         }
       }
     }
-    // console.log(event)
-    if (activePointCurr !== undefined) {
+
+    if (activePointCurr !== null) {
       setActivePoint(activePointCurr)
     }
   }
 
   return (
-    <>
-      {/* {activePointPopup} */}
+    <div style={{ position: 'relative', width, height }}>
+      {activePointPopup}
       <svg
         width={width}
         height={height}
-        style={{border: '1px solid black'}}
+        style={{ border: '1px solid #ccc', borderRadius: '4px' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setActivePoint(null)}
       >
@@ -163,6 +170,6 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
         {dots}
         {activePointJsx}
       </svg>
-    </>
+    </div>
   )
 }
