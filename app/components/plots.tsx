@@ -25,7 +25,7 @@ export async function LinePlot({
           substr(name,position('/' in name)+1,
             length(name)-position('/' in name))::int as input_size
         from '${ROOT_DIR}/${file}'
-        where cycles is not null and input_size < (1 << 10)
+        where cycles is not null and input_size < (1 << 12)
         `
   }
   const query = template_query('/code/binary-search/results/amdzen5/cycles.csv',)
@@ -61,7 +61,7 @@ export async function LinePlot({
     <LinePlotClient height={height} width={width} maxx={max_input_size?.valueOf()}
       maxy={max_cycle_count?.valueOf()}
       lines={lines}
-      metadata={{xName: 'Input Size', yName: 'Cycles'}}
+      metadata={{xName: 'number of elements', yName: 'Cycles'}}
     />
     </div>
   )
