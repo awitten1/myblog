@@ -44,7 +44,7 @@ interface TestSvgProps {
   marginBottom?: number
 }
 
-export function TestSvgComponent({ children, height, width, marginLeft = 0, marginBottom = 0 }: TestSvgProps) {
+export function Grid({ children, height, width, marginLeft = 0, marginBottom = 0 }: TestSvgProps) {
   const horizontalLineRef = useRef<SVGLineElement>(null);
   const verticalLineRef = useRef<SVGLineElement>(null);
   const [activePoint, setActivePoint] = useState<Point | null>(null);
