@@ -62,16 +62,30 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
 
   const [activePoint, setActivePoint] = useState<(Point & { x_coord: number, y_coord: number }) | null>(null)
 
-  maxx *= 1.1
-  maxy *= 1.1
+  maxx *= 1.05
+  maxy *= 1.05
   for (let line of lines) {
     line.points.sort((a: Point, b: Point) => { return a.x - b.x; });
   }
 
-  const x = d3.scaleLinear([0, maxx], [0, width]);
-  const y = d3.scaleLinear([0, maxy], [0, height]);
+  const lxMargin = 50;
+  const yMargin = 50;
+  const rxMargin = 50;
 
-  // let svgpaths: React.SVGPathElement = []
+  const dataWidth = width - lxMargin - rxMargin;
+  const dataHeight = height - yMargin;
+
+  let boxJsx = (
+    <rect x={lxMargin} y={0} height={dataHeight}
+      width={dataWidth}
+      fill="none"
+      className="plotRect"
+    />
+  )
+
+  const x = d3.scaleLinear([0, maxx], [lxMargin, dataWidth]);
+  const y = d3.scaleLinear([0, maxy], [0, dataHeight]);
+
   let svgpaths = []
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j]
@@ -81,7 +95,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
       if (i > 0) {
         dstr += ' L '
       }
-      dstr += `${x(point.x)} ${height - y(point.y)}`
+      dstr += `${x(point.x)} ${dataHeight - y(point.y)}`
     }
     svgpaths.push(
       (
@@ -101,7 +115,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
       let point = line.points[i]
       dots.push(
         (
-          <circle key={`${cantor(i, j)}`} cx={x(point.x)} cy={height - y(point.y)} r={pointRadius}
+          <circle key={`${cantor(i, j)}`} cx={x(point.x)} cy={dataHeight - y(point.y)} r={pointRadius}
             fill="black"
             stroke={"black"} strokeWidth={3} />
         )
@@ -111,7 +125,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
 
   let activePointJsx = activePoint && (
     <>
-      <circle cx={x(activePoint.x)} cy={height - y(activePoint.y)} r={activePointRadius}
+      <circle cx={x(activePoint.x)} cy={dataHeight - y(activePoint.y)} r={activePointRadius}
         className={'activePoint'} />
     </>
   )
@@ -137,7 +151,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     for (let line of lines) {
       for (let point of line.points) {
         const pointX = x(point.x)
-        const pointY = height - y(point.y)
+        const pointY = dataHeight - y(point.y)
         const currDist = Math.sqrt((mouseX - pointX) ** 2 + (mouseY - pointY) ** 2);
         if (currDist < dist && currDist < 80) {
           activePointCurr = {
@@ -156,19 +170,63 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     }
   }
 
+  let num_ticks = 10;
+  let horizontalLines = []
+  let verticalLines = []
+  let tickWidth = dataWidth / num_ticks;
+  let tickHeight = dataHeight / num_ticks;
+  let xLabels = []
+  let yLabels = []
+  for (let i = 0; i < num_ticks; i++) {
+    const xTick = lxMargin + (i+1)*tickWidth
+    const yTick = (i+1)*tickHeight
+    horizontalLines.push(
+      (
+        <line className={'gridLine'} x1={xTick} x2={xTick}
+        y1={0} y2={height - yMargin}
+        key={i}
+        />
+      )
+    )
+    xLabels.push(
+      (
+        <text key={i} className={'xLabel'} x={xTick-10} y={dataHeight+20}>
+          {Math.round(x.invert(xTick))}
+        </text>
+      )
+    )
+    verticalLines.push(
+      (
+        <line className={'gridLine'} y1={yTick} y2={yTick}
+          x1={lxMargin} x2={width - rxMargin} key={i}/>
+      )
+    )
+    yLabels.push(
+      (
+        <text key={i} className={'yLabel'} y={yTick+5} x={lxMargin-35}>
+          {Math.round(y.invert(dataHeight - yTick))}
+        </text>
+      )
+    )
+  }
+
   return (
     <div style={{ position: 'relative', width, height }}>
       {activePointPopup}
       <svg
         width={width}
         height={height}
-        style={{ border: '1px solid #ccc', borderRadius: '4px' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setActivePoint(null)}
       >
+        {boxJsx}
         {svgpaths}
         {dots}
         {activePointJsx}
+        {horizontalLines}
+        {xLabels}
+        {verticalLines}
+        {yLabels}
       </svg>
     </div>
   )

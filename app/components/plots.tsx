@@ -61,10 +61,12 @@ export async function LinePlot({
   lines.push(await getPoints('LinearSearch',connection,'Linear Search'))
 
   return (
+    <div className={'plotWrapper'}>
     <LinePlotClient height={height} width={width} maxx={max_input_size?.valueOf()}
       maxy={max_cycle_count?.valueOf()}
       lines={lines}
       metadata={{xName: 'Input Size', yName: 'cycles'}}
     />
+    </div>
   )
 }

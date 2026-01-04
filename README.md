@@ -2,7 +2,7 @@
 
 Install with
 ```
-npm pnpm install
+npm install
 ```
 To run:
 ```

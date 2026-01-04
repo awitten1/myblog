@@ -43,3 +43,24 @@ svg {
   font-weight: 600;
 }
 
+.plotWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.plotWrapper > * {
+  margin: 100px;
+}
+
+.plotRect {
+  stroke: black;
+  stroke-width: 1px;
+}
+
+.gridLine {
+  stroke: rgb(139, 138, 138);
+  stroke-width: 0.3px;
+}
+
+
