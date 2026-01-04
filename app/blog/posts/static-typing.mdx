@@ -30,7 +30,10 @@ Two 🍰 is: {Math.PI * 2}
     let width = 900;
     let height = 600;
     return (
-      <LinePlot height={height} width={width}/>
+      <>
+      <LinePlot height={height} width={width} yaxis={'cycles'}/>
+      <LinePlot height={height} width={width} yaxis={'instructions'}/>
+      </>
     )
   })()
 }
