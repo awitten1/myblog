@@ -10,13 +10,9 @@ const ROOT_DIR = process.env.ROOT_DIR || process.cwd()
 export async function LinePlot({
   height,
   width,
-  alg,
-  strokeColor
 }: {
   height: number;
   width: number;
-  alg: string;
-  strokeColor: string;
 }) {
   const connection = await DuckDBConnection.create();
 
@@ -65,7 +61,7 @@ export async function LinePlot({
     <LinePlotClient height={height} width={width} maxx={max_input_size?.valueOf()}
       maxy={max_cycle_count?.valueOf()}
       lines={lines}
-      metadata={{xName: 'Input Size', yName: 'cycles'}}
+      metadata={{xName: 'Input Size', yName: 'Cycles'}}
     />
     </div>
   )

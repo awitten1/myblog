@@ -2,40 +2,7 @@
 
 import React, { useRef, useState, createContext, useCallback, useMemo } from "react"
 import * as d3 from 'd3';
-
-// interface Point {
-//   x: number
-//   y: number
-//   input_size: number
-//   cycles: number
-// }
-
-interface LineMeta {
-  id: string
-  label: string
-  color: string
-}
-
-interface GraphContextType {
-  registerPoints: (id: string, points: Point[]) => void
-  unregisterPoints: (id: string) => void
-  registerLine: (meta: LineMeta) => void
-  unregisterLine: (id: string) => void
-}
-
-export const GraphContext = createContext<GraphContextType | null>(null)
-
-function range(start: number, end?: number, step = 1) {
-  if (end === undefined) {
-    end = start
-    start = 0
-  }
-  let ret: number[] = []
-  for (let i = start; i <= (end as number); i += step) {
-    ret.push(i)
-  }
-  return ret;
-}
+import './graph_styles.css'
 
 export interface Point {
   x: number;
@@ -62,13 +29,13 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
 
   const [activePoint, setActivePoint] = useState<(Point & { x_coord: number, y_coord: number }) | null>(null)
 
-  maxx *= 1.05
+  maxx *= 1.00
   maxy *= 1.05
   for (let line of lines) {
     line.points.sort((a: Point, b: Point) => { return a.x - b.x; });
   }
 
-  const lxMargin = 50;
+  const lxMargin = 100;
   const yMargin = 50;
   const rxMargin = 50;
 
@@ -83,7 +50,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     />
   )
 
-  const x = d3.scaleLinear([0, maxx], [lxMargin, dataWidth]);
+  const x = d3.scaleLinear([0, maxx], [lxMargin, width - rxMargin - 30]);
   const y = d3.scaleLinear([0, maxy], [0, dataHeight]);
 
   let svgpaths = []
@@ -183,6 +150,29 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     )
   }
 
+  const xAxisLabel = (
+    <text
+      x={lxMargin + dataWidth / 2}
+      y={dataHeight + 45}
+      textAnchor="middle"
+      className="axis-label"
+    >
+      {metadata.xName}
+    </text>
+  )
+
+  const yAxisLabel = (
+    <text
+      x={-(dataHeight / 2)}
+      y={lxMargin - 45}
+      transform="rotate(-90)"
+      textAnchor="middle"
+      className="axis-label"
+    >
+      {metadata.yName}
+    </text>
+  )
+
   function handleMouseMove(event) {
     let dist = Infinity
     const mouseX = event.nativeEvent.offsetX
@@ -219,7 +209,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
 
   const legend = (
     <div className="legend-container">
-        {legendItems}
+      {legendItems}
     </div>
   )
 
@@ -241,6 +231,8 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
         {xLabels}
         {verticalLines}
         {yLabels}
+        {xAxisLabel}
+        {yAxisLabel}
       </svg>
     </div>
   )
