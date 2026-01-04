@@ -1,13 +1,13 @@
 import React from 'react'
 import { readFile } from "fs/promises"
-import { Grid } from "./client/graph"
+import { LinePlotClient, Point, Line } from "./client/graph"
 import { DuckDBConnection } from '@duckdb/node-api';
 import * as d3 from "d3";
-import { InteractiveLine } from "./interactive_line"
+import './plot.css'
 
 const ROOT_DIR = process.env.ROOT_DIR || process.cwd()
 
-export async function DrawSvgLine({
+export async function LinePlot({
   height,
   width,
   alg,
@@ -40,33 +40,31 @@ export async function DrawSvgLine({
     max(cycles) max_cycle_count from results`)
   let { max_input_size, max_cycle_count } = reader.getRowObjects()[0];
 
-  const x = d3.scaleLinear([0, max_input_size], [0, width]);
-  const y = d3.scaleLinear([0, max_cycle_count], [0, height]);
+  async function getPoints(alg, connection, name) {
+    const reader = await connection.runAndReadAll(
+      `select cycles,input_size from results
+      where algorithm = '${alg}'
+      order by input_size asc`);
+    const rows = reader.getRowObjects();
+    const points = rows.map((obj) => {return {x: obj.input_size,y: obj.cycles}})
 
-  reader = await connection.runAndReadAll(
-    `select * from results
-    where algorithm = '${alg}'
-    order by input_size asc`);
-  const rows = reader.getRowObjects();
-
-  const points = rows.map((row: any) => ({
-    x: x(row.input_size),
-    y: height - y(row.cycles),
-    input_size: row.input_size,
-    cycles: row.cycles
-  }));
+    return {points, className: alg, name: name}
+  }
 
   const labelMap: Record<string, string> = {
     'BinarySearch': 'Binary Search',
     'LinearSearch': 'Linear Search'
   };
 
+  let lines: Line[] = []
+  lines.push(await getPoints('BinarySearch',connection,'Binary Search'))
+  lines.push(await getPoints('LinearSearch',connection,'Linear Search'))
+
   return (
-    <InteractiveLine
-      id={alg}
-      label={labelMap[alg] || alg}
-      points={points}
-      strokeColor={strokeColor}
+    <LinePlotClient height={height} width={width} maxx={max_input_size?.valueOf()}
+      maxy={max_cycle_count?.valueOf()}
+      lines={lines}
+      metadata={{xName: 'Input Size', yName: 'cycles'}}
     />
   )
 }

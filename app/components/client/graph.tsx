@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useRef, useState, createContext, useCallback, useMemo } from "react"
+import * as d3 from 'd3';
 
-interface Point {
-  x: number
-  y: number
-  input_size: number
-  cycles: number
-}
+// interface Point {
+//   x: number
+//   y: number
+//   input_size: number
+//   cycles: number
+// }
 
 interface LineMeta {
   id: string
@@ -36,225 +37,132 @@ function range(start: number, end?: number, step = 1) {
   return ret;
 }
 
-interface TestSvgProps {
-  children: React.ReactNode
-  height: number
-  width: number
-  marginLeft?: number
-  marginBottom?: number
+export interface Point {
+  x: number;
+  y: number;
 }
 
-export function Grid({ children, height, width, marginLeft = 0, marginBottom = 0 }: TestSvgProps) {
-  const horizontalLineRef = useRef<SVGLineElement>(null);
-  const verticalLineRef = useRef<SVGLineElement>(null);
-  const [activePoint, setActivePoint] = useState<Point | null>(null);
-  const pointsMapRef = useRef<Record<string, Point[]>>({});
-  const [lines, setLines] = useState<Record<string, LineMeta>>({});
+export interface Line {
+  points: Point[];
+  className: string;
+  name: string;
+}
 
-  const registerPoints = useCallback((id: string, points: Point[]) => {
-    pointsMapRef.current[id] = points;
-  }, []);
+export interface ChartMetadata {
+  xName: string;
+  yName: string;
+}
 
-  const unregisterPoints = useCallback((id: string) => {
-    delete pointsMapRef.current[id];
-  }, []);
+function cantor(k1: number,k2: number): number {
+  return ((k1 + k2 + 1)*(k1 + k2) + k2)/2
+}
 
-  const registerLine = useCallback((meta: LineMeta) => {
-    setLines(prev => ({ ...prev, [meta.id]: meta }));
-  }, []);
+export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
+  {lines: Line[], height: number, width: number, maxx: number, maxy: number, metadata: ChartMetadata}) {
 
-  const unregisterLine = useCallback((id: string) => {
-    setLines(prev => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-  }, []);
+  const [activePoint, setActivePoint] = useState<Point & {absoluteX: number, absoluteY: number}>(null)
 
-  const sep = 30
+  maxx*=1.1
+  maxy*=1.1
+  for (let line of lines) {
+    line.points.sort((a: Point, b: Point) => { return a.x - b.x; });
+  }
 
-  const handleMouseMove = (event: React.MouseEvent<SVGSVGElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+  const x = d3.scaleLinear([0,maxx], [0,width]);
+  const y = d3.scaleLinear([0,maxy], [0,height]);
 
-    let nearest: Point | null = null;
-    let minDist = Infinity;
+  // let svgpaths: React.SVGPathElement = []
+  let svgpaths = []
+  for (let j = 0; j < lines.length; j++) {
+    const line = lines[j]
+    let dstr = 'M '
+    for (let i = 0; i < line.points.length; i++) {
+      let point = line.points[i];
+      if (i > 0) {
+        dstr += ' L '
+      }
+      dstr += `${x(point.x)} ${height-y(point.y)}`
+    }
+    svgpaths.push(
+      (
+        <path fill="none" stroke={'black'}
+          className={line.className} key={j} d={dstr}/>
+      )
+    )
+  }
 
-    for (const points of Object.values(pointsMapRef.current)) {
-      for (const p of points) {
-        const dist = Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
-        if (dist < minDist) {
-          minDist = dist;
-          nearest = p;
+  const pointRadius = 3;
+  const activePointRadius = pointRadius+7;
+
+  let dots = []
+  for (let j = 0; j < lines.length; j++) {
+    const line = lines[j]
+    for (let i = 0; i < line.points.length; i++) {
+      let point = line.points[i]
+      dots.push(
+        (
+          <circle key={`${cantor(i,j)}`} cx={x(point.x)} cy={height-y(point.y)} r={pointRadius}
+            fill="black"
+            stroke={"black"} strokeWidth={3} />
+        )
+      )
+    }
+  }
+
+  let activePointJsx = activePoint && (
+    <>
+      <circle cx={x(activePoint.x)} cy={height - y(activePoint.y)} r={activePointRadius}
+      className={'activePoint'} />
+    </>
+  )
+
+  let activePointPopup = activePoint && (
+    <ul className={'popup'} style={{position: 'absolute', zIndex: 1000,
+      top: activePoint.absoluteY, left: activePoint.absoluteX}}>
+      <li>{`${metadata.xName}: ${activePoint.x}`}</li>
+      <li>{`${metadata.yName}: ${activePoint.y}`}</li>
+    </ul>
+  )
+
+  function handleMouseMove(event) {
+    let dist = Infinity
+    const mouseX = event.nativeEvent.offsetX
+    const mouseY = event.nativeEvent.offsetY
+    let activePointCurr: Point & {absoluteX: number, absoluteY: number} | null = null
+    for (let line of lines) {
+      for (let point of line.points) {
+        const currDist = Math.sqrt((mouseX - x(point.x))**2+(mouseY
+            - (height - y(point.y)))**2);
+        if (currDist < dist && currDist < 80) {
+          activePointCurr = {x: point.x, y: point.y,
+              absoluteX: event.nativeEvent.pageX,
+              absoluteY: event.nativeEvent.pageY
+          }
+          dist = currDist
+          // console.log(activePointCurr)
         }
       }
     }
-
-    if (nearest && minDist < 50) {
-      if (activePoint?.x !== nearest.x || activePoint?.y !== nearest.y) {
-        setActivePoint(nearest);
-      }
-      if (horizontalLineRef.current) {
-        horizontalLineRef.current.setAttribute('y1', String(nearest.y));
-        horizontalLineRef.current.setAttribute('y2', String(nearest.y));
-      }
-      if (verticalLineRef.current) {
-        verticalLineRef.current.setAttribute('x1', String(nearest.x));
-        verticalLineRef.current.setAttribute('x2', String(nearest.x));
-      }
-    } else {
-      if (activePoint !== null) {
-        setActivePoint(null);
-      }
-      if (horizontalLineRef.current) {
-        horizontalLineRef.current.setAttribute('y1', String(y));
-        horizontalLineRef.current.setAttribute('y2', String(y));
-      }
-      if (verticalLineRef.current) {
-        verticalLineRef.current.setAttribute('x1', String(x));
-        verticalLineRef.current.setAttribute('x2', String(x));
-      }
+    // console.log(event)
+    if (activePointCurr !== undefined) {
+      setActivePoint(activePointCurr)
     }
-  };
-
-  const contextValue = useMemo(() => ({
-    registerPoints,
-    unregisterPoints,
-    registerLine,
-    unregisterLine
-  }), [registerPoints, unregisterPoints, registerLine, unregisterLine]);
+  }
 
   return (
-    <GraphContext value={contextValue}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-        marginTop: '60px',
-        marginBottom: marginBottom ? `${marginBottom + 20}px` : '40px'
-      }}>
-        <div style={{
-          position: 'relative',
-          width: `${width}px`,
-        }}>
-          {/* Legend */}
-          <div style={{
-            position: 'absolute',
-            top: -30,
-            right: 0,
-            display: 'flex',
-            gap: '16px',
-            fontSize: '12px',
-            color: '#888'
-          }}>
-            {Object.values(lines).map(line => (
-              <div key={line.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '2px', background: line.color }} />
-                <span>{line.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <svg
-            width={width}
-            height={height}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setActivePoint(null)}
-            style={{ cursor: 'crosshair', background: '#000', overflow: 'visible' }}
-          >
-            <g fill="white">
-              <rect width={width} height={height}></rect>
-            </g>
-
-            <g fill="white" stroke="#070707ff" strokeWidth="0.5">
-              {range(0, width, sep).map((i) => (
-                <line key={`v-${i}`} x1={i} y1={0} x2={i} y2={height}></line>
-              ))}
-
-              {range(0, height, sep).map((i) => (
-                <line key={`h-${i}`} x1={0} y1={i} x2={width} y2={i}></line>
-              ))}
-            </g>
-
-            <g stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" strokeDasharray="4 4">
-              <line ref={verticalLineRef} x1={0} y1={0} x2={0} y2={height} />
-              <line ref={horizontalLineRef} x1={0} y1={0} x2={width} y2={0} />
-            </g>
-
-            {children}
-
-            {/* Axes Labels */}
-            {marginBottom > 0 && (
-              <text
-                x={width / 2}
-                y={height + marginBottom - 10}
-                fill="#888"
-                textAnchor="middle"
-                fontSize="12"
-                style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
-              >
-                Input Size
-              </text>
-            )}
-
-            {marginLeft > 0 && (
-              <text
-                transform={`translate(${-marginLeft + 20}, ${height / 2}) rotate(-90)`}
-                fill="#888"
-                textAnchor="middle"
-                fontSize="12"
-                style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
-              >
-                Cycles
-              </text>
-            )}
-
-            {activePoint && (
-              <circle
-                cx={activePoint.x}
-                cy={activePoint.y}
-                r={6}
-                fill="none"
-                stroke="#fff"
-                strokeWidth="2"
-              />
-            )}
-          </svg>
-
-          {activePoint && (
-            <div style={{
-              position: 'absolute',
-              top: activePoint.y - 80,
-              left: activePoint.x + 20,
-              backgroundColor: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(4px)',
-              color: 'white',
-              padding: '10px 14px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-              pointerEvents: 'none',
-              zIndex: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px'
-            }}>
-              <div style={{ opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '10px' }}>Performance Data</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
-                <span>Cycles:</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#10b981' }}>{activePoint.cycles.toLocaleString()}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
-                <span>Input Size:</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{activePoint.input_size}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </GraphContext>
+    <>
+      {/* {activePointPopup} */}
+      <svg
+        width={width}
+        height={height}
+        style={{border: '1px solid black'}}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setActivePoint(null)}
+      >
+        {svgpaths}
+        {dots}
+        {activePointJsx}
+      </svg>
+    </>
   )
 }

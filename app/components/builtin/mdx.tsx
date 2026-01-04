@@ -3,9 +3,8 @@ import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
-import {Grid} from '../client/graph'
-import { DrawSvgLine } from '../plots'
 import {Iframe} from '../iframe'
+import { LinePlot } from '../plots'
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
@@ -109,8 +108,7 @@ let components = {
   code: Code,
   Table,
   Thing,
-  Grid,
-  DrawSvgLine,
+  LinePlot,
   Iframe,
 }
 

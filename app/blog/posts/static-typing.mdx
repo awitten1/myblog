@@ -30,10 +30,7 @@ Two 🍰 is: {Math.PI * 2}
     let width = 900;
     let height = 600;
     return (
-      <Grid width={width} height={height} marginLeft={60} marginBottom={60}>
-        <DrawSvgLine width={width} height={height} alg={'LinearSearch'} strokeColor={'green'}/>
-        <DrawSvgLine width={width} height={height} alg={'BinarySearch'} strokeColor={'blue'}/>
-      </Grid>
+      <LinePlot height={height} width={width}/>
     )
   })()
 }

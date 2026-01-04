@@ -1,0 +1,26 @@
+
+
+.BinarySearch {
+  stroke: rgb(249, 65, 3)
+}
+
+.LinearSearch {
+  stroke: rgb(11, 11, 18)
+}
+
+svg {
+  margin-bottom: 100px;
+  cursor: crosshair;
+}
+
+.activePoint {
+  stroke: rgba(57, 55, 55, 0.73);
+  stroke-width: 2px;
+  fill: none;
+}
+
+.popup {
+  padding: 2px;
+  border: 1px black;
+  color: rgb(63, 152, 85);
+}
