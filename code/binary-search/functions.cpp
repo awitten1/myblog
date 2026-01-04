@@ -1,7 +1,6 @@
 #include "functions.hpp"
 #include <cstddef>
 #include <vector>
-#include <omp.h>
 
 std::vector<long> get_nums(size_t num_elems) {
     std::vector<long> ret(num_elems);
