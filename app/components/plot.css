@@ -1,11 +1,15 @@
 
+html {
+  --binary-search-stroke: rgb(249, 65, 3);
+  --linear-search-stroke: rgb(11, 11, 18);
+}
 
 .BinarySearch {
-  stroke: rgb(249, 65, 3)
+  stroke: var(--binary-search-stroke);
 }
 
 .LinearSearch {
-  stroke: rgb(11, 11, 18)
+  stroke: var(--linear-search-stroke);
 }
 
 svg {
@@ -63,4 +67,38 @@ svg {
   stroke-width: 0.3px;
 }
 
+.legend-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  justify-content: flex-end;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 0.9rem;
+}
 
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Use the same stroke colors for the swatches */
+.legend-swatch.BinarySearch {
+  background-color: var(--binary-search-stroke);
+}
+
+.legend-swatch.LinearSearch {
+  background-color: var(--linear-search-stroke);
+}
+
+.legend-label {
+  color: #555;
+  font-weight: 500;
+}

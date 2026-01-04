@@ -106,7 +106,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   }
 
   const pointRadius = 3;
-  const activePointRadius = pointRadius + 7;
+  const activePointRadius = pointRadius + 5;
 
   let dots = []
   for (let j = 0; j < lines.length; j++) {
@@ -143,6 +143,46 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     </div>
   )
 
+  let num_ticks = 10;
+  let horizontalLines = []
+  let verticalLines = []
+  let tickWidth = dataWidth / num_ticks;
+  let tickHeight = dataHeight / num_ticks;
+  let xLabels = []
+  let yLabels = []
+  for (let i = 0; i < num_ticks; i++) {
+    const xTick = lxMargin + (i + 1) * tickWidth
+    const yTick = (i + 1) * tickHeight
+    horizontalLines.push(
+      (
+        <line className={'gridLine'} x1={xTick} x2={xTick}
+          y1={0} y2={height - yMargin}
+          key={i}
+        />
+      )
+    )
+    xLabels.push(
+      (
+        <text key={i} className={'xLabel'} x={xTick - 10} y={dataHeight + 20}>
+          {Math.round(x.invert(xTick))}
+        </text>
+      )
+    )
+    verticalLines.push(
+      (
+        <line className={'gridLine'} y1={yTick} y2={yTick}
+          x1={lxMargin} x2={width - rxMargin} key={i} />
+      )
+    )
+    yLabels.push(
+      (
+        <text key={i} className={'yLabel'} y={yTick + 5} x={lxMargin - 35}>
+          {Math.round(y.invert(dataHeight - yTick))}
+        </text>
+      )
+    )
+  }
+
   function handleMouseMove(event) {
     let dist = Infinity
     const mouseX = event.nativeEvent.offsetX
@@ -170,49 +210,23 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     }
   }
 
-  let num_ticks = 10;
-  let horizontalLines = []
-  let verticalLines = []
-  let tickWidth = dataWidth / num_ticks;
-  let tickHeight = dataHeight / num_ticks;
-  let xLabels = []
-  let yLabels = []
-  for (let i = 0; i < num_ticks; i++) {
-    const xTick = lxMargin + (i+1)*tickWidth
-    const yTick = (i+1)*tickHeight
-    horizontalLines.push(
-      (
-        <line className={'gridLine'} x1={xTick} x2={xTick}
-        y1={0} y2={height - yMargin}
-        key={i}
-        />
-      )
-    )
-    xLabels.push(
-      (
-        <text key={i} className={'xLabel'} x={xTick-10} y={dataHeight+20}>
-          {Math.round(x.invert(xTick))}
-        </text>
-      )
-    )
-    verticalLines.push(
-      (
-        <line className={'gridLine'} y1={yTick} y2={yTick}
-          x1={lxMargin} x2={width - rxMargin} key={i}/>
-      )
-    )
-    yLabels.push(
-      (
-        <text key={i} className={'yLabel'} y={yTick+5} x={lxMargin-35}>
-          {Math.round(y.invert(dataHeight - yTick))}
-        </text>
-      )
-    )
-  }
+  const legendItems = lines.map((line, idx) => (
+    <div key={idx} className="legend-item">
+      <span className={`legend-swatch ${line.className}`}></span>
+      <span className="legend-label">{line.name}</span>
+    </div>
+  ))
+
+  const legend = (
+    <div className="legend-container">
+        {legendItems}
+    </div>
+  )
 
   return (
     <div style={{ position: 'relative', width, height }}>
       {activePointPopup}
+      {legend}
       <svg
         width={width}
         height={height}
