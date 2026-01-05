@@ -3,7 +3,7 @@ html {
   --linear-search-stroke: rgb(11, 11, 18);
 }
 
-.legend-swatch.BinarySearch {
+.legend-swatch.BinarySearchRandomTarget {
   background-color: var(--binary-search-stroke);
 }
 
@@ -11,7 +11,7 @@ html {
   background-color: var(--linear-search-stroke);
 }
 
-.BinarySearch {
+.BinarySearchRandomTarget {
   stroke: var(--binary-search-stroke);
 }
 

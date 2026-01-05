@@ -57,7 +57,7 @@ export async function LinePlot({
   }
 
   let lines: any[] = []
-  lines.push(await getPoints('BinarySearch',connection,'Binary Search'))
+  lines.push(await getPoints('BinarySearchRandomTarget',connection,'Binary Search'))
   lines.push(await getPoints('LinearSearch',connection,'Linear Search'))
 
   return (

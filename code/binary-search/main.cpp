@@ -34,12 +34,6 @@ static void BM_BinarySearch(benchmark::State& state) {
 
     uint64_t i = 0;
     for (auto _ : state) {
-        // For small n, the PauseTiming dominates the runtime in the below approach.
-        //state.PauseTiming();
-        // long target = targets.back();
-        // if constexpr (randomize_search)
-        //     target = rng(gen);
-        //state.ResumeTiming();
         long target = targets.back();
         if constexpr (randomize_search) {
             target = targets[i++ & (target_vec_size - 1)];
