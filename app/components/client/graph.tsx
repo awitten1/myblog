@@ -125,14 +125,14 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
       (
         <line className={'gridLine'} x1={xPos} x2={xPos}
           y1={0} y2={dataHeight}
-          key={`h-${tick}`}
+          key={tick}
         />
       )
     );
     xLabels.push(
       (
-        <text key={`xl-${tick}`} className={'xLabel'} x={xPos} y={dataHeight + 20} textAnchor="middle">
-          {Math.round(tick)}
+        <text key={tick} className={'xLabel'} x={xPos} y={dataHeight + 20} textAnchor="middle">
+          {tick}
         </text>
       )
     );
@@ -143,13 +143,13 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     verticalLines.push(
       (
         <line className={'gridLine'} y1={yPos} y2={yPos}
-          x1={lxMargin} x2={width - rxMargin} key={`v-${tick}`} />
+          x1={lxMargin} x2={width - rxMargin} key={tick} />
       )
     );
     yLabels.push(
       (
-        <text key={`yl-${tick}`} className={'yLabel'} y={yPos + 4} x={lxMargin - 15} textAnchor="end">
-          {Math.round(tick)}
+        <text key={tick} className={'yLabel'} y={yPos + 4} x={lxMargin - 15} textAnchor="end">
+          {tick}
         </text>
       )
     );
