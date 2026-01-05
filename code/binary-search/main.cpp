@@ -7,6 +7,7 @@
 #include "functions.hpp"
 
 
+template<bool randomize_search>
 static void BM_BinarySearch(benchmark::State& state) {
     size_t N = state.range(0);
     auto nums = get_nums(N);
@@ -15,8 +16,12 @@ static void BM_BinarySearch(benchmark::State& state) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<long> rng{};
 
+    long target = rng(gen);
     for (auto _ : state) {
-        long target = rng(gen);
+        state.PauseTiming();
+        if constexpr (randomize_search)
+            target = rng(gen);
+        state.ResumeTiming();
         benchmark::DoNotOptimize(binary_search(nums, target));
     }
     state.SetComplexityN(N);
@@ -31,7 +36,9 @@ static void BM_LinearSearch(benchmark::State& state) {
     std::uniform_int_distribution<long> rng{};
 
     for (auto _ : state) {
+        state.PauseTiming();
         long target = rng(gen);
+        state.ResumeTiming();
         benchmark::DoNotOptimize(linear_search(nums, target));
     }
     state.SetComplexityN(N);
@@ -46,7 +53,13 @@ BENCHMARK(BM_LinearSearch)->DenseRange(8,end_dense_first,1<<5)
     ->RangeMultiplier(2)->Range(end_dense, end_range)
     ->Complexity();
 
-BENCHMARK(BM_BinarySearch)->DenseRange(8,end_dense_first,1<<5)
+BENCHMARK(BM_BinarySearch<true>)->DenseRange(8,end_dense_first,1<<5)
+    ->DenseRange(end_dense_first,end_dense,1<<7)
+    ->RangeMultiplier(2)->Range(end_dense, end_range)
+    ->Complexity();
+
+
+BENCHMARK(BM_BinarySearch<false>)->DenseRange(8,end_dense_first,1<<5)
     ->DenseRange(end_dense_first,end_dense,1<<7)
     ->RangeMultiplier(2)->Range(end_dense, end_range)
     ->Complexity();
