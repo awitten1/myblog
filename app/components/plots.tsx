@@ -27,7 +27,7 @@ export async function LinePlot({
   function template_query(file: string) {
     return `create or replace temp table results as
         select distinct on(name)
-          ${yaxis},
+          ${yaxis} as ${yaxis.replaceAll('-','_').replaceAll('"','')},
           substr(name, position('_' in name)+1,
             position('/' in name)-position('_' in name)-1) as algorithm,
           substr(name,position('/' in name)+1,
@@ -40,6 +40,7 @@ export async function LinePlot({
   const query = template_query(file)
 
   await connection.run(query)
+  yaxis = yaxis.replaceAll('-','_').replaceAll('"','')
 
   let reader = await connection.runAndReadAll(`select max(input_size) max_input_size,
     max(${yaxis}) max_yaxis from results`)
