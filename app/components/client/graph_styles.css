@@ -1,6 +1,5 @@
-
 svg {
-  margin-bottom: 100px;
+  /* margin-bottom: 100px; */
   cursor: crosshair;
 }
 
@@ -34,14 +33,23 @@ svg {
   font-weight: 600;
 }
 
+figure.plot {
+  margin: 75px;
+}
+
+figure.plot > figcaption {
+  text-align: center;
+  margin-top: 10px;
+}
+
 .plotWrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.plotWrapper > * {
-  margin: 100px;
+.plotWrapper>figcaption {
+  margin-bottom: 100px;
 }
 
 .plotRect {
@@ -61,6 +69,11 @@ svg {
   justify-content: flex-end;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: 0.9rem;
+}
+
+.yLabel,
+.xLabel {
+  font-size: 0.75rem;
 }
 
 .legend-item {
@@ -84,8 +97,7 @@ svg {
 .axis-label {
   fill: #333;
   font-family: sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  text-transform: uppercase;
 }

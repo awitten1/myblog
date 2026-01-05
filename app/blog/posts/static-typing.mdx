@@ -27,14 +27,50 @@ Two 🍰 is: {Math.PI * 2}
 
 {
   (() => {
-    let width = 900;
-    let height = 600;
+    let width = 700;
+    let height = 400;
     return (
       <>
-      <LinePlot height={height} width={width} yaxis={'cycles'}/>
-      <LinePlot height={height} width={width} yaxis={'instructions'}/>
+      <LinePlot height={height} width={width} yaxis={'cycles'}
+        file={'/code/binary-search/results/amdzen5/cycles.csv'}
+        yaxis_pretty_string={'Cycles'}
+        caption={'Cycle counts on different array sizes on an AMD Zen 5 CPU'}/>
+
       </>
     )
   })()
 }
+
+{
+  (() => {
+    let width = 700;
+    let height = 400;
+    return (
+      <>
+      <LinePlot height={height} width={width} yaxis={'instructions'}
+        file={'/code/binary-search/results/amdzen5/cycles.csv'}
+        yaxis_pretty_string={'Instructions'}
+        caption={'Instruction counts on different array sizes on an AMD Zen 5 CPU'}/>
+      </>
+    )
+  })()
+}
+
+
+Some random text in between.
+
+{
+  (() => {
+    let width = 700;
+    let height = 400;
+    return (
+      <LinePlot height={height} width={width} yaxis={'real_time'}
+        file={'/code/binary-search/results/macbookpro/results.csv'}
+        yaxis_pretty_string={'Real Time (ns)'}
+        caption={'Real time different array sizes on a MacBook Pro'}/>
+    )
+  })()
+}
+
+
 

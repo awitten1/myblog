@@ -10,27 +10,34 @@ const ROOT_DIR = process.env.ROOT_DIR || process.cwd()
 export async function LinePlot({
   height,
   width,
-  yaxis
+  yaxis,
+  file,
+  yaxis_pretty_string,
+  caption
 }: {
   height: number;
   width: number;
   yaxis: string;
+  file: string;
+  yaxis_pretty_string: string;
+  caption: string;
 }) {
   const connection = await DuckDBConnection.create();
 
   function template_query(file: string) {
     return `create or replace temp table results as
         select distinct on(name)
-          cycles,instructions,
+          ${yaxis},
           substr(name, position('_' in name)+1,
             position('/' in name)-position('_' in name)-1) as algorithm,
           substr(name,position('/' in name)+1,
             length(name)-position('/' in name))::int as input_size
         from '${ROOT_DIR}/${file}'
-        where cycles is not null and input_size < (1 << 10)
+        where iterations is not null
+           and input_size < (1 << 10)
         `
   }
-  const query = template_query('/code/binary-search/results/amdzen5/cycles.csv',)
+  const query = template_query(file)
 
   await connection.run(query)
 
@@ -58,7 +65,7 @@ export async function LinePlot({
     <LinePlotClient height={height} width={width} maxx={max_input_size?.valueOf()}
       maxy={max_yaxis?.valueOf()}
       lines={lines}
-      metadata={{xName: 'number of elements', yName: yaxis}}
+      metadata={{xName: 'Number of Elements', yName: yaxis_pretty_string, caption}}
     />
     </div>
   )

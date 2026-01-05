@@ -18,6 +18,7 @@ export interface Line {
 export interface ChartMetadata {
   xName: string;
   yName: string;
+  caption: string;
 }
 
 function cantor(k1: number, k2: number): number {
@@ -37,7 +38,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
 
   const lxMargin = 100;
   const yMargin = 50;
-  const rxMargin = 50;
+  const rxMargin = 0;
 
   const dataWidth = width - lxMargin - rxMargin;
   const dataHeight = height - yMargin;
@@ -72,8 +73,8 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     )
   }
 
-  const pointRadius = 3;
-  const activePointRadius = pointRadius + 5;
+  const pointRadius = 1;
+  const activePointRadius = pointRadius + 3;
 
   let dots = []
   for (let j = 0; j < lines.length; j++) {
@@ -110,45 +111,49 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     </div>
   )
 
-  let num_ticks = 10;
+  const xTicks = x.ticks(Math.max(2, Math.floor(dataWidth / 80)));
+  const yTicks = y.ticks(Math.max(2, Math.floor(dataHeight / 50)));
+
   let horizontalLines = []
   let verticalLines = []
-  let tickWidth = dataWidth / num_ticks;
-  let tickHeight = dataHeight / num_ticks;
   let xLabels = []
   let yLabels = []
-  for (let i = 0; i < num_ticks; i++) {
-    const xTick = lxMargin + (i + 1) * tickWidth
-    const yTick = (i + 1) * tickHeight
+
+  xTicks.forEach((tick, i) => {
+    const xPos = x(tick);
     horizontalLines.push(
       (
-        <line className={'gridLine'} x1={xTick} x2={xTick}
-          y1={0} y2={height - yMargin}
-          key={i}
+        <line className={'gridLine'} x1={xPos} x2={xPos}
+          y1={0} y2={dataHeight}
+          key={`h-${tick}`}
         />
       )
-    )
+    );
     xLabels.push(
       (
-        <text key={i} className={'xLabel'} x={xTick - 10} y={dataHeight + 20}>
-          {Math.round(x.invert(xTick))}
+        <text key={`xl-${tick}`} className={'xLabel'} x={xPos} y={dataHeight + 20} textAnchor="middle">
+          {Math.round(tick)}
         </text>
       )
-    )
+    );
+  });
+
+  yTicks.forEach((tick, i) => {
+    const yPos = dataHeight - y(tick);
     verticalLines.push(
       (
-        <line className={'gridLine'} y1={yTick} y2={yTick}
-          x1={lxMargin} x2={width - rxMargin} key={i} />
+        <line className={'gridLine'} y1={yPos} y2={yPos}
+          x1={lxMargin} x2={width - rxMargin} key={`v-${tick}`} />
       )
-    )
+    );
     yLabels.push(
       (
-        <text key={i} className={'yLabel'} y={yTick + 5} x={lxMargin - 35}>
-          {Math.round(y.invert(dataHeight - yTick))}
+        <text key={`yl-${tick}`} className={'yLabel'} y={yPos + 4} x={lxMargin - 15} textAnchor="end">
+          {Math.round(tick)}
         </text>
       )
-    )
-  }
+    );
+  });
 
   const xAxisLabel = (
     <text
@@ -214,26 +219,29 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   )
 
   return (
-    <div style={{ position: 'relative', width, height }}>
-      {activePointPopup}
-      {legend}
-      <svg
-        width={width}
-        height={height}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setActivePoint(null)}
-      >
-        {boxJsx}
-        {svgpaths}
-        {dots}
-        {activePointJsx}
-        {horizontalLines}
-        {xLabels}
-        {verticalLines}
-        {yLabels}
-        {xAxisLabel}
-        {yAxisLabel}
-      </svg>
-    </div>
+    <figure className="plot" style={{ position: 'relative', width, height }}>
+        {activePointPopup}
+        {legend}
+        <svg
+          width={width}
+          height={height}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setActivePoint(null)}
+        >
+          {boxJsx}
+          {svgpaths}
+          {dots}
+          {activePointJsx}
+          {horizontalLines}
+          {xLabels}
+          {verticalLines}
+          {yLabels}
+          {xAxisLabel}
+          {yAxisLabel}
+        </svg>
+        <figcaption>
+          {metadata.caption}.
+        </figcaption>
+    </figure>
   )
 }
