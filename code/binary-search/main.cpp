@@ -2,6 +2,7 @@
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <cstdlib>
+#include <limits>
 #include <random>
 #include <vector>
 #include "functions.hpp"
@@ -10,14 +11,15 @@ constexpr static uint64_t target_vec_size = 1 << 20;
 static std::vector<long> targets(target_vec_size);
 static bool initialized = false;
 
-static void initialize_targets() {
+static void initialize_targets(std::vector<long>& target,
+    long low = std::numeric_limits<long>::min(), long high = std::numeric_limits<long>::max()) {
     if (initialized) {
         return;
     }
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<long> rng{};
-    for (auto& t : targets) {
+    std::uniform_int_distribution<long> rng{low, high};
+    for (auto& t : target) {
         t = rng(gen);
     }
     initialized = true;
@@ -25,12 +27,13 @@ static void initialize_targets() {
 
 
 template<bool randomize_search>
-static void BM_BinarySearch(benchmark::State& state) {
+static void BM_BinarySearch(benchmark::State& state,
+    long low = std::numeric_limits<long>::min(), long high = std::numeric_limits<long>::max()) {
     size_t N = state.range(0);
     auto nums = get_nums(N);
     std::sort(nums.begin(), nums.end());
 
-    initialize_targets();
+    initialize_targets(targets, low, high);
 
     uint64_t i = 0;
     for (auto _ : state) {
@@ -48,7 +51,7 @@ static void BM_BinarySearchRandomTarget(benchmark::State& state) {
 }
 
 static void BM_BinarySearchPredictableTarget(benchmark::State& state) {
-    BM_BinarySearch<false>(state);
+    BM_BinarySearch<true>(state, 10,15);
 }
 
 
@@ -56,7 +59,7 @@ static void BM_LinearSearch(benchmark::State& state) {
     size_t N = state.range(0);
     auto nums = get_nums(N);
     std::sort(nums.begin(), nums.end());
-    initialize_targets();
+    initialize_targets(targets);
 
     long i = 0;
     for (auto _ : state) {
