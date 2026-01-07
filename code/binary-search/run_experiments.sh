@@ -8,12 +8,16 @@ mkdir -p results/macbookpro
 
 if [ $(uname -s) = 'Linux' ]; then
     cpu_model=$(cat /proc/cpuinfo | grep 'model name' | head -n 1 | cut -d ':' -f2)
-    target_model='9900X'
-    if [[ ${cpu_model} == *${target_model}* ]]; then
+    if [[ ${cpu_model} == *'9900X'* ]]; then
         ./build/main --benchmark_format=csv \
             --benchmark_perf_counters=instructions,cycles > results/amdzen5/cycles.csv
         ./build/main --benchmark_format=csv \
             --benchmark_perf_counters=branches,branch-misses > results/amdzen5/branches.csv
+    elif [[ ${cpu_model} == *'3995WX'* ]]; then
+        ./build/main --benchmark_format=csv \
+            --benchmark_perf_counters=instructions,cycles > results/amdzen2/cycles.csv
+        ./build/main --benchmark_format=csv \
+            --benchmark_perf_counters=branches,branch-misses > results/amdzen2/branches.csv
     fi
 fi
 
