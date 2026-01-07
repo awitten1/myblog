@@ -13,17 +13,12 @@ mkdir -p $build_dir
 mkdir -p $source_dir
 
 install_libpfm() {
-    local distro=$(cat /etc/os-release | grep ^NAME | cut -d'=' -f2 | tr -d '"')
-    if [ ${distro} = 'Ubuntu' ]; then
-        sudo apt install -y libpfm4-dev
-    else
-        pushd $source_dir
-        git clone --branch v4.13.0 https://github.com/wcohen/libpfm4.git
-        pushd libpfm4
-        make PREFIX=$install_dir install
-        popd
-        popd
-    fi
+    pushd $source_dir
+    git clone --branch v4.13.0 https://github.com/wcohen/libpfm4.git
+    pushd libpfm4
+    make PREFIX=$install_dir install
+    popd
+    popd
 }
 
 install_google_benchmark() {

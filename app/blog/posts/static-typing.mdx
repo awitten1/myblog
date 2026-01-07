@@ -80,8 +80,8 @@ Two 🍰 is: {Math.PI * 2}
       <>
       <LinePlot height={height} width={width} yaxis={'\"branch-misses\"'}
         file={'/code/binary-search/results/amdzen5/branches.csv'}
-        yaxis_pretty_string={'Branch Misses'}
-        caption={'Instruction counts on different array sizes on an AMD Zen 5 CPU'}/>
+        yaxis_pretty_string={'Branch Prediction Misses'}
+        caption={'Branch prediction misses on different array sizes on an AMD Zen 5 CPU'}/>
       </>
     )
   })()
@@ -96,7 +96,7 @@ Two 🍰 is: {Math.PI * 2}
       <LinePlot height={height} width={width} yaxis={'\"branch-misses\"'}
         file={'/code/binary-search/results/amdzen2/branches.csv'}
         yaxis_pretty_string={'Branch Misses'}
-        caption={'Instruction counts on different array sizes on an AMD Zen 2 CPU'}/>
+        caption={'Branch prediction misses on different array sizes on an AMD Zen 2 CPU'}/>
       </>
     )
   })()
