@@ -24,7 +24,10 @@ install_google_benchmark() {
     local enable_libpfm=OFF
     if [ $(uname -s) = 'Linux' ]; then
         enable_libpfm=ON
-        sudo apt install -y libpfm4-dev
+        local distro=$(cat /etc/os-release | grep ^NAME | cut -d'=' -f2 | tr -d '"')
+        if [ ${distro} = 'Ubuntu' ]; then
+            sudo apt install -y libpfm4-dev
+        fi
     fi
     cmake -B $build_dir/benchmark -S benchmark -DCMAKE_INSTALL_PREFIX=$install_dir \
         -DCMAKE_BUILD_TYPE=Release -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -G Ninja \
