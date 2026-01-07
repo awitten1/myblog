@@ -4,6 +4,7 @@ set -eux
 
 mkdir -p results
 mkdir -p results/amdzen5
+mkdir -p results/amdzen2
 mkdir -p results/macbookpro
 
 if [ $(uname -s) = 'Linux' ]; then
