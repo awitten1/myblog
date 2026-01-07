@@ -47,6 +47,22 @@ Two 🍰 is: {Math.PI * 2}
     let height = 400;
     return (
       <>
+      <LinePlot height={height} width={width} yaxis={'cycles'}
+        file={'/code/binary-search/results/amdzen2/cycles.csv'}
+        yaxis_pretty_string={'Cycles'}
+        caption={'Cycle counts on different array sizes on an AMD Zen 2 CPU'}/>
+
+      </>
+    )
+  })()
+}
+
+{
+  (() => {
+    let width = 700;
+    let height = 400;
+    return (
+      <>
       <LinePlot height={height} width={width} yaxis={'instructions'}
         file={'/code/binary-search/results/amdzen5/cycles.csv'}
         yaxis_pretty_string={'Instructions'}
@@ -66,6 +82,21 @@ Two 🍰 is: {Math.PI * 2}
         file={'/code/binary-search/results/amdzen5/branches.csv'}
         yaxis_pretty_string={'Branch Misses'}
         caption={'Instruction counts on different array sizes on an AMD Zen 5 CPU'}/>
+      </>
+    )
+  })()
+}
+
+{
+  (() => {
+    let width = 700;
+    let height = 400;
+    return (
+      <>
+      <LinePlot height={height} width={width} yaxis={'\"branch-misses\"'}
+        file={'/code/binary-search/results/amdzen2/branches.csv'}
+        yaxis_pretty_string={'Branch Misses'}
+        caption={'Instruction counts on different array sizes on an AMD Zen 2 CPU'}/>
       </>
     )
   })()
