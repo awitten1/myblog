@@ -18,7 +18,7 @@ install_google_benchmark() {
     pushd $source_dir
 
     if [ ! -d "benchmark" ]; then
-        git clone --branch ${gbench_version} git@github.com:google/benchmark.git
+        git clone --branch ${gbench_version} https://github.com/google/benchmark.git
     fi
 
     local enable_libpfm=OFF
