@@ -36,9 +36,9 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     line.points.sort((a: Point, b: Point) => { return a.x - b.x; });
   }
 
-  const lxMargin = 100;
+  const lxMargin = 50;
   const yMargin = 50;
-  const rxMargin = 0;
+  const rxMargin = 50;
 
   const dataWidth = width - lxMargin - rxMargin;
   const dataHeight = height - yMargin;
