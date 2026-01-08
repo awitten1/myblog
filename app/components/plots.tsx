@@ -5,6 +5,47 @@ import { DuckDBConnection } from '@duckdb/node-api';
 import * as d3 from "d3";
 import './plot.css'
 
+/**
+ select name, (macroops_retired) / (macroops_dispatched) as fraction_of_uops_that_do_not_retire
+    from (
+      select
+        name,
+        "perf_raw::r4307AA" as macroops_dispatched,
+        "perf_raw::r4300C1" macroops_retired,
+        "perf_raw::r430076"*8 as dispatch_slots
+      from 'results/amdzen5/bad_speculation.csv'
+    )
+ */
+
+/**
+
+create temp table bad_speculation as
+  select name,
+    "perf_raw::r4307AA" as macroops_dispatched,
+    "perf_raw::r4300C1" macroops_retired,
+    "perf_raw::r430076"*8 as dispatch_slots
+  from 'results/amdzen5/bad_speculation.csv';
+
+create temp table frontend_backend_speculation as
+  select name,
+    "perf_raw::r100431EA0" as unused_dispatch_slots_backend,
+    "perf_raw::r1004301A0" as unused_dispatch_slots_frontend,
+    "perf_raw::r430076"*8 as dispatch_slots
+  from 'results/amdzen5/frontend_backend_bound.csv';
+
+from frontend_backend_speculation f join bad_speculation b using (name)
+  select f.name,
+    f.dispatch_slots,
+    b.macroops_dispatched,
+    f.unused_dispatch_slots_backend,
+    f.unused_dispatch_slots_frontend
+  order by f.dispatch_slots desc;
+
+  It should be true that:
+  macro-ops dispatched + unused dispatch slots = dispatch_slots
+
+ */
+
 const ROOT_DIR = process.env.ROOT_DIR || process.cwd()
 
 export async function LinePlot({
