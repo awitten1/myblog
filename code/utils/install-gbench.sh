@@ -37,7 +37,8 @@ install_google_benchmark() {
     fi
     cmake -B $build_dir/benchmark -S benchmark -DCMAKE_INSTALL_PREFIX=$install_dir \
         -DCMAKE_BUILD_TYPE=Release -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -G Ninja \
-        -DBENCHMARK_ENABLE_LIBPFM=${enable_libpfm} -DCMAKE_PREFIX_PATH=$install_dir
+        -DBENCHMARK_ENABLE_LIBPFM=${enable_libpfm} -DCMAKE_PREFIX_PATH=$install_dir \
+        -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
 
     cmake --build $build_dir/benchmark -j8
     cmake --install $build_dir/benchmark
