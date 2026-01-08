@@ -1,29 +1,61 @@
 ---
-title: 'When Is Linear Search Faster Than Binary Search'
-publishedAt: '2026-01-01'
+title: 'When Is Linear Search Faster Than Binary Search?'
+publishedAt: '2026-01-07'
 summary: 'Summary goes here.'
 ---
 
-In the ever-evolving landscape of software development, the debate between dynamic and static typing continues to be a hot topic. While dynamic typing offers flexibility and rapid development, static typing brings its own set of powerful advantages that can significantly improve the quality and maintainability of code. In this post, we'll explore why static typing is crucial for developers, accompanied by practical examples through markdown code snippets.
+There are two primary ways to search a sorted array for a given key: binary search and linear search.
+You may be aware that binary search is an `O(logn)` algorithm and linear search is an `O(n)` algorithm.
+However, there are cases when for small values of `n`, linear search is faster than binary search.
+The goal of this post is to answer when and why this is the case.
 
-## Improved Code Quality and Safety
+The full code for this post can be found [here](https://github.com/awitten1/myblog/tree/main/code/binary-search).
 
-One of the most compelling reasons to use static typing is the improvement it brings to code quality and safety. By enforcing type checks at compile time, static typing catches errors early in the development process, reducing the chances of runtime errors.
+## The Code
 
-```ts
-function greet(name: string): string {
-  return `Hello, ${name}!`
-}
-```
-
-Two 🍰 is: {Math.PI * 2}
-
-
-<Thing />
+In this post we analyze the following implementations of binary search and linear search.
 
 {
-//<Iframe width={'1000px'} height={'heightpx'} src={"https://godbolt.org/e#z:OYLghAFBqd5QCxAYwPYBMCmBRdBLAF1QCcAaPECAMzwBtMA7AQwFtMQByARg9KtQYEAysib0QXACx8BBAKoBnTAAUAHpwAMvAFYTStJg1DIApACYAQuYukl9ZATwDKjdAGFUtAK4sGEgOykrgAyeAyYAHI%2BAEaYxCAAzKQADqgKhE4MHt6%2BASlpGQKh4VEssfFJdpgOmUIETMQE2T5%2BXIFVNQJ1DQTFkTFxibb1jc25bcM9faXliQCUtqhexMjsHOYJYcjeWADUJgluyAoE%2BIIH2CYaAIIbWzuY%2B4fHBMRhwBdXt2abDNteewObgAbtUiMRPjcvukAF6YAD6BF20TCDQAnvClA1kAgIGgGCddid0CAQKCHCQgbQBB8EpczAA2Xbk0i7alGXYjYCYAhzfb%2BKw3XbCol4OGItmoADuTwAIrsNKyEHhgAg5czqgA6WGYCBzA6C25CkVS5X0XYQakyoG7ZWqvkmAVfEUu0XipEsPDodVW/aWC12tUAWklUrmAHozAbna7hXgqBbySYAKwWT3oFPym1cnkOp3G2Mu30HeXpv0WXZcaMF12O%2BWYWhKfmGwuuwPq9PV66tusx4W9mvEHnLBihrsDo3XHUS2hhTANTHzla4/GE4mk8ngqk0z6MjXIVns4Cchrc3nNvtuhFIr2qdUaLsu/jEC0G3a3p5uffasW6/UJCtrGsW88xbQt40TaoUwsW9MyeS4EnlHNz0dMDW2FaIhyYABrR9CwnF0CJFIcCBHd90FUcd/FlDgFloThk14PwOC0UhUE4NwgP9BQlhWR4Nh4UgCE0WiFmwkBJGTTVJA0fx/C4BkAE5/EUsxFIADjMQJ6I4SQmJEtjOF4BQQEVYSWNo0g4FgJA0BYZI6DichKDshz6HiYAuGTMw%2BDoAg4hMiBogMlFmGINFOEE0L0QAeWibQwUi3g7LYQQYoYWgIos0gsGiLxgDcMRGySnLMBYQxgHEbL8CHGpQRM7LMFUaovH8gywn8nTWNnTD0Q8LAStePAWBK0FiGiNJMFlMqKtnIwRIWKgDGABQADU8EwKUYuSRgSv4QQRDEdgpBkQRFBUdRst0Lh9AqlAuJsHqTMgBZUGSRwBAaoMYoSXYg3K5cS2YRxQV4VAxreLBnr1WwGzBTIXAYdxPBaPQQjnGZBhu1J0g%2BrIUfGfJccyaYBniG6Ojx7pRgJ1pYfsKmRl6DGyb0E4ejGOn2caUmyixhYeOWVYJDohj9Oy9iOF2VR1IZIMGUkXZgGQZBKykswLVwQgSD9BIuDmXhzK0OYxJAZNJE1ZNVLMdSEg0MxZI0Nokh0vTSBGrgNEVZjWMl4zTKEhbRY4Mxxd9ozA4sk3SDG9JnEkIA"}/>
+(() => {
+
+  const code = `
+  size_t binary_search(const std::vector<long>& vec, long target) {
+      size_t low = 0, high = vec.size();
+
+      while (low < high) {
+          size_t mid = low + (high - low)/2;
+          if (vec[mid] < target) {
+              low = mid + 1;
+          } else {
+              high = mid;
+          }
+      }
+      return low;
+  }
+
+  size_t linear_search(const std::vector<long>& vec, long target) {
+      size_t idx = 0;
+      for (; idx < vec.size(); ++idx) {
+          if (vec[idx] >= target) {
+              break;
+          }
+      }
+      return idx;
+  }
+  `
+  return (
+    <SyntaxHighlighter language={"cpp"}>
+    {code}
+    </SyntaxHighlighter>
+  )
+})()
 }
+
+
+
+## Measurements
+
+The following graph plots cycle counts on an AMD Ryzen 9 9900X (a Zen 5 CPU):
 
 {
   (() => {
@@ -41,21 +73,9 @@ Two 🍰 is: {Math.PI * 2}
   })()
 }
 
-{
-  (() => {
-    let width = 700;
-    let height = 400;
-    return (
-      <>
-      <LinePlot height={height} width={width} yaxis={'cycles'}
-        file={'/code/binary-search/results/amdzen2/cycles.csv'}
-        yaxis_pretty_string={'Cycles'}
-        caption={'Cycle counts on different array sizes on an AMD Zen 2 CPU'}/>
-
-      </>
-    )
-  })()
-}
+For small arrays (fewer than 136 elements), linear search is actually faster than binary search!
+This is despite the fact that binary search always executes fewer CPU instructions, as the following graph
+demonstrates.
 
 {
   (() => {
@@ -72,6 +92,9 @@ Two 🍰 is: {Math.PI * 2}
   })()
 }
 
+So what is going on here? We see that despite binary search always executing fewer instructions
+than linear search, binary search executes fewer Instructions Per Cycle (IPC) than linear search does.
+
 {
   (() => {
     let width = 700;
@@ -86,6 +109,24 @@ Two 🍰 is: {Math.PI * 2}
     )
   })()
 }
+
+
+{
+  (() => {
+    let width = 700;
+    let height = 400;
+    return (
+      <>
+      <LinePlot height={height} width={width} yaxis={'cycles'}
+        file={'/code/binary-search/results/amdzen2/cycles.csv'}
+        yaxis_pretty_string={'Cycles'}
+        caption={'Cycle counts on different array sizes on an AMD Zen 2 CPU'}/>
+
+      </>
+    )
+  })()
+}
+
 
 {
   (() => {

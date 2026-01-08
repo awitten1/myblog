@@ -5,6 +5,7 @@ import { highlight } from 'sugar-high'
 import React from 'react'
 import {Iframe} from '../iframe'
 import { LinePlot } from '../plots'
+import SyntaxHighlighter from 'react-syntax-highlighter';
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
@@ -110,6 +111,7 @@ let components = {
   Thing,
   LinePlot,
   Iframe,
+  SyntaxHighlighter,
 }
 
 export function CustomMDX(props) {
