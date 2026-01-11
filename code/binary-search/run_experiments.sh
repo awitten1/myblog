@@ -6,6 +6,7 @@ mkdir -p results
 mkdir -p results/amdzen5
 mkdir -p results/amdzen2
 mkdir -p results/macbookpro
+mkdir -p results/raspi
 
 if [ $(uname -s) = 'Linux' ]; then
     cpu_model=$(cat /proc/cpuinfo | grep 'model name' | head -n 1 | cut -d ':' -f2)
@@ -35,10 +36,15 @@ if [ $(uname -s) = 'Linux' ]; then
 
 
     elif [[ ${cpu_model} == *'3995WX'* ]]; then
-        ./build/main --benchmark_format=csv \
+         ./build/main --benchmark_format=csv \
             --benchmark_perf_counters=instructions,cycles > results/amdzen2/cycles.csv
         ./build/main --benchmark_format=csv \
             --benchmark_perf_counters=branches,branch-misses > results/amdzen2/branches.csv
+    elif [[ $(uname -a) == *'raspi'* ]]; then
+        ./build/main --benchmark_format=csv \
+            --benchmark_perf_counters=instructions,cycles > results/raspi/cycles.csv
+        ./build/main --benchmark_format=csv \
+            --benchmark_perf_counters=branches,branch-misses > results/raspi/branches.csv
     fi
 fi
 
