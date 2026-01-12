@@ -1,11 +1,11 @@
-@import 'tailwindcss';
-
-::selection {
-  background-color: #47a3f3;
-  color: #fefefe;
-}
-
 :root {
+  --bg: #fdfdfd;
+  --fg: #111111;
+  --fg-muted: #666666;
+  --accent: #0070f3;
+  --border: #eaeaea;
+  --selection-bg: #47a3f3;
+
   --sh-class: #2d5e9d;
   --sh-identifier: #354150;
   --sh-sign: #8996a3;
@@ -15,136 +15,348 @@
   --sh-jsxliterals: #6266d1;
   --sh-property: #e25a1c;
   --sh-entity: #e25a1c;
+  --bg-code: #f6f8fa;
+  --plot-dot: #111111;
+
+  /* Syntax Highlighting (Prism) - High Contrast */
+  --token-comment: #6a737d;
+  --token-punctuation: #24292e;
+  --token-property: #005cc5;
+  --token-selector: #22863a;
+  --token-operator: #d73a49;
+  --token-attr-name: #6f42c1;
+  --token-variable: #e36209;
+  --token-function: #6f42c1;
+  --token-string: #032f62;
+  --token-keyword: #d73a49;
+  --token-boolean: #005cc5;
+  --token-number: #005cc5;
+
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --sh-class: #4c97f8;
-    --sh-identifier: white;
-    --sh-keyword: #f47067;
-    --sh-string: #0fa295;
-  }
-  html {
-    color-scheme: dark;
-  }
+[data-theme='dark'] {
+  --bg: #050505;
+  --fg: #eeeeee;
+  --fg-muted: #999999;
+  --accent: #3b82f6;
+  --border: #222222;
+  --selection-bg: #1e40af;
+
+  --sh-class: #4c97f8;
+  --sh-identifier: #ffffff;
+  --sh-keyword: #f47067;
+  --sh-string: #0fa295;
+  --bg-code: #0d1117;
+  --plot-dot: #ffffff;
+
+  /* Syntax Highlighting (Prism Dark) - High Contrast */
+  --token-comment: #8b949e;
+  --token-punctuation: #d1d5da;
+  --token-property: #79c0ff;
+  --token-selector: #7ee787;
+  --token-operator: #ffa657;
+  --token-attr-name: #d2a8ff;
+  --token-variable: #ffa657;
+  --token-function: #d2a8ff;
+  --token-string: #a5d6ff;
+  --token-keyword: #ff7b72;
+  --token-boolean: #79c0ff;
+  --token-number: #79c0ff;
+
+  color-scheme: dark;
 }
 
-html {
-  min-width: 360px;
+::selection {
+  background-color: var(--selection-bg);
+  color: #fefefe;
 }
 
-.prose .anchor {
-  @apply absolute invisible no-underline;
-
-  margin-left: -1em;
-  padding-right: 0.5em;
-  width: 80%;
-  max-width: 700px;
-  cursor: pointer;
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
-.anchor:hover {
-  @apply visible;
+html,
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.prose a {
-  @apply underline transition-all decoration-neutral-400 dark:decoration-neutral-600 underline-offset-2 decoration-[0.1em];
+body {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  line-height: 1.6;
 }
 
-.prose .anchor:after {
-  @apply text-neutral-300 dark:text-neutral-700;
-  content: '#';
+main {
+  display: flex;
+  flex-direction: column;
 }
 
-.prose *:hover > .anchor {
-  @apply visible;
+/* Typography */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2.25rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  margin: 1rem 0;
+  color: var(--fg);
+}
+
+a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--border);
+  transition: text-decoration-color 0.2s ease;
+}
+
+a:hover {
+  text-decoration-color: var(--fg);
+}
+
+/* Layout Utilities */
+.container {
+  width: 100%;
+}
+
+.section-title {
+  margin-bottom: 2rem;
+}
+
+.tracking-tighter {
+  letter-spacing: -0.05em;
+}
+
+/* Prose for MDX */
+.prose {
+  width: 100%;
 }
 
 .prose pre {
-  @apply bg-neutral-50 dark:bg-neutral-900 rounded-lg overflow-x-auto border border-neutral-200 dark:border-neutral-900 py-2 px-3 text-sm;
+  background-color: var(--bg-code, #111111);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-size: 0.875rem;
 }
 
 .prose code {
-  @apply px-1 py-0.5 rounded-lg;
+  font-family: var(--font-geist-mono), monospace;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
 }
 
 .prose pre code {
-  @apply p-0;
-  border: initial;
-  line-height: 1.5;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 
-.prose code span {
-  @apply font-medium;
+[data-theme='dark'] .prose code {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.prose img {
-  /* Don't apply styles to next/image */
-  @apply m-0;
+[data-theme='dark'] .prose pre code {
+  background-color: transparent;
 }
 
-.prose p {
-  @apply my-4 text-neutral-800 dark:text-neutral-200;
-}
-
-.prose h1 {
-  @apply text-4xl font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose h2 {
-  @apply text-xl font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose h3 {
-  @apply text-xl font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose h4 {
-  @apply text-lg font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose strong {
-  @apply font-medium;
-}
-
-.prose ul {
-  @apply list-disc pl-6;
-}
-
+.prose ul,
 .prose ol {
-  @apply list-decimal pl-6;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
 }
 
-.prose > :first-child {
-  /* Override removing top margin, causing layout shift */
-  margin-top: 1.25em !important;
-  margin-bottom: 1.25em !important;
+.prose li {
+  margin: 0.5rem 0;
 }
 
-pre::-webkit-scrollbar {
-  display: none;
+.prose blockquote {
+  border-left: 4px solid var(--border);
+  padding-left: 1rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  margin: 1.5rem 0;
 }
 
-pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+/* Nav */
+nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 4rem;
 }
 
-/* Remove Safari input shadow on mobile */
-input[type='text'],
-input[type='email'] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+nav a {
+  text-decoration: none;
+  font-size: 0.95rem;
+  color: var(--fg-muted);
+  transition: color 0.2s ease;
 }
 
+nav a:hover {
+  color: var(--fg);
+}
+
+/* Post List */
+.post-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+}
+
+.post-item:hover .post-title {
+  text-decoration: underline;
+}
+
+.post-date {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  width: 100px;
+}
+
+.post-title {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.post-row {
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .post-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+/* Table */
 table {
-  display: block;
-  max-width: fit-content;
-  overflow-x: auto;
-  white-space: nowrap;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+  text-align: left;
+}
+
+th {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme='dark'] th {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .title {
   text-wrap: balance;
+}
+
+/* Prism Syntax Highlighting Overrides */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--token-comment);
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: var(--token-punctuation);
+}
+
+.token.namespace {
+  opacity: 0.7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--token-property);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--token-string);
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: var(--token-operator);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: var(--token-keyword);
+}
+
+.token.function,
+.token.class-name {
+  color: var(--token-function);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: var(--token-variable);
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
 }

@@ -1,6 +1,11 @@
-html {
-  --binary-search-stroke: rgb(249, 65, 3);
-  --linear-search-stroke: rgb(11, 11, 18);
+:root {
+  --binary-search-stroke: #ef4444;
+  --linear-search-stroke: #0f172a;
+}
+
+[data-theme='dark'] {
+  --binary-search-stroke: #f87171;
+  --linear-search-stroke: #94a3b8;
 }
 
 .legend-swatch.BinarySearchRandomTarget {
@@ -15,6 +20,19 @@ html {
   stroke: var(--binary-search-stroke);
 }
 
+path.BinarySearchRandomTarget {
+  fill: none;
+}
+
 .LinearSearch {
   stroke: var(--linear-search-stroke);
+}
+
+path.LinearSearch {
+  fill: none;
+}
+
+circle {
+  fill: var(--plot-dot);
+  stroke: var(--plot-dot);
 }

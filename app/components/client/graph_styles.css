@@ -1,25 +1,24 @@
 svg {
-  /* margin-bottom: 100px; */
   cursor: crosshair;
 }
 
 .activePoint {
-  stroke: rgba(57, 55, 55, 0.73);
+  stroke: var(--accent);
   stroke-width: 2px;
   fill: none;
 }
 
 .popup {
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--bg);
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: 0.85rem;
   line-height: 1.4;
-  color: #333;
+  color: var(--fg);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -29,44 +28,57 @@ svg {
 }
 
 .popup-label strong {
-  color: #000;
+  color: var(--fg);
   font-weight: 600;
 }
 
 figure.plot {
-  margin: 75px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: calc(100vw - 2rem);
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-figure.plot > figcaption {
+figure.plot>svg {
+  width: 100%;
+  height: 100%;
+}
+
+figure.plot>figcaption {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--fg-muted);
 }
 
 .plotWrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.plotWrapper>figcaption {
-  margin-bottom: 100px;
+  width: 100%;
+  margin: 2rem 0;
 }
 
 .plotRect {
-  stroke: black;
+  stroke: var(--fg);
   stroke-width: 1px;
 }
 
 .gridLine {
-  stroke: rgb(139, 138, 138);
-  stroke-width: 0.3px;
+  stroke: var(--border);
+  stroke-width: 1px;
 }
 
 .legend-container {
   display: flex;
   gap: 16px;
   margin-bottom: 12px;
+  width: 100%;
   justify-content: flex-end;
+  padding-right: 50px;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: 0.9rem;
 }
@@ -74,6 +86,7 @@ figure.plot > figcaption {
 .yLabel,
 .xLabel {
   font-size: 0.75rem;
+  fill: var(--fg-muted);
 }
 
 .legend-item {
@@ -86,17 +99,17 @@ figure.plot > figcaption {
   width: 12px;
   height: 12px;
   border-radius: 2px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
 }
 
 .legend-label {
-  color: #555;
+  color: var(--fg-muted);
   font-weight: 500;
 }
 
 .axis-label {
-  fill: #333;
-  font-family: sans-serif;
+  fill: var(--fg);
+  font-family: var(--font-geist-sans), sans-serif;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;

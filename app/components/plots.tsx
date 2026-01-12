@@ -68,7 +68,7 @@ export async function LinePlot({
   function template_query(file: string) {
     return `create or replace temp table results as
         select distinct on(name)
-          ${yaxis} as ${yaxis.replaceAll('-','_').replaceAll('"','')},
+          ${yaxis} as ${yaxis.replaceAll('-', '_').replaceAll('"', '')},
           substr(name, position('_' in name)+1,
             position('/' in name)-position('_' in name)-1) as algorithm,
           substr(name,position('/' in name)+1,
@@ -81,7 +81,7 @@ export async function LinePlot({
   const query = template_query(file)
 
   await connection.run(query)
-  yaxis = yaxis.replaceAll('-','_').replaceAll('"','')
+  yaxis = yaxis.replaceAll('-', '_').replaceAll('"', '')
 
   let reader = await connection.runAndReadAll(`select max(input_size) max_input_size,
     max(${yaxis}) max_yaxis from results`)
@@ -93,22 +93,23 @@ export async function LinePlot({
       where algorithm = '${alg}'
       order by input_size asc`);
     const rows = reader.getRowObjects();
-    const points = rows.map((obj) => {return {x: obj.input_size,y: obj[yaxis]}})
+    const points = rows.map((obj) => { return { x: obj.input_size, y: obj[yaxis] } })
 
-    return {points, className: alg, name: name}
+    return { points, className: alg, name: name }
   }
 
-  let lines: any[] = []
-  lines.push(await getPoints('BinarySearchRandomTarget',connection,'Binary Search'))
-  lines.push(await getPoints('LinearSearch',connection,'Linear Search'))
+  let lines: Line[] = []
+  lines.push(await getPoints('BinarySearchRandomTarget', connection, 'Binary Search'))
+  lines.push(await getPoints('LinearSearch', connection, 'Linear Search'))
 
   return (
     <div className={'plotWrapper'}>
-    <LinePlotClient height={height} width={width} maxx={max_input_size?.valueOf()}
-      maxy={max_yaxis?.valueOf()}
-      lines={lines}
-      metadata={{xName: 'Number of Elements', yName: yaxis_pretty_string, caption}}
-    />
+      <LinePlotClient height={height} width={width}
+        maxx={Number(max_input_size) || 0}
+        maxy={Number(max_yaxis) || 0}
+        lines={lines}
+        metadata={{ xName: 'Number of Elements', yName: yaxis_pretty_string, caption }}
+      />
     </div>
   )
 }
