@@ -2,14 +2,15 @@ import { BlogPosts } from 'app/components/builtin/posts'
 
 export default function Page() {
   return (
-    <section>
-      <h1 className="mb-8 text-2xl font-semibold tracking-tighter">
-        My Blog
+    <section className="container">
+      <h1 className="section-title tracking-tighter">
+        Technical Musings
       </h1>
-      <p className="mb-4">
-        {`A paragraph.`}
+      <p>
+        I'm into low-level systems, performance optimization, and explaining how things work under the hood.
+        Currently exploring binary search vs. linear search metrics, DuckDB, and performance-driven blog design.
       </p>
-      <div className="my-8">
+      <div className="section-content">
         <BlogPosts />
       </div>
     </section>

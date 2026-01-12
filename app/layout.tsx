@@ -46,19 +46,29 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cx(
-        'text-black bg-white dark:text-white dark:bg-black',
         GeistSans.variable,
         GeistMono.variable
       )}
     >
-      <body className="antialiased max-w-xl mx-4 mt-8 lg:mx-auto">
-        <main className="flex-auto min-w-0 mt-6 flex flex-col px-2 md:px-0">
+      <body className={cx(GeistSans.variable, GeistMono.variable)}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function() {
+              try {
+                var theme = localStorage.getItem('theme');
+                var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+                if (!theme && supportDarkMode) theme = 'dark';
+                if (!theme) theme = 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+              } catch (e) {}
+            })()`,
+          }}
+        />
+        <main>
           <Navbar />
           {children}
-          {/* <Footer /> */}
-          {/* <Analytics /> */}
-          {/* <SpeedInsights /> */}
         </main>
       </body>
     </html>

@@ -36,7 +36,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     line.points.sort((a: Point, b: Point) => { return a.x - b.x; });
   }
 
-  const lxMargin = 50;
+  const lxMargin = 85;
   const yMargin = 50;
   const rxMargin = 50;
 
@@ -54,7 +54,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   const x = d3.scaleLinear([0, maxx], [lxMargin, width - rxMargin - 30]);
   const y = d3.scaleLinear([0, maxy], [0, dataHeight]);
 
-  let svgpaths = []
+  let svgpaths: React.ReactNode[] = []
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j]
     let dstr = 'M '
@@ -76,7 +76,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   const pointRadius = 1;
   const activePointRadius = pointRadius + 3;
 
-  let dots = []
+  let dots: React.ReactNode[] = []
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j]
     for (let i = 0; i < line.points.length; i++) {
@@ -114,10 +114,10 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   const xTicks = x.ticks(Math.max(2, Math.floor(dataWidth / 80)));
   const yTicks = y.ticks(Math.max(2, Math.floor(dataHeight / 50)));
 
-  let horizontalLines = []
-  let verticalLines = []
-  let xLabels = []
-  let yLabels = []
+  let horizontalLines: React.ReactNode[] = []
+  let verticalLines: React.ReactNode[] = []
+  let xLabels: React.ReactNode[] = []
+  let yLabels: React.ReactNode[] = []
 
   xTicks.forEach((tick, i) => {
     const xPos = x(tick);
@@ -169,7 +169,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   const yAxisLabel = (
     <text
       x={-(dataHeight / 2)}
-      y={lxMargin - 45}
+      y={lxMargin - 65}
       transform="rotate(-90)"
       textAnchor="middle"
       className="axis-label"
@@ -178,11 +178,15 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     </text>
   )
 
+  const svgRef = useRef<SVGSVGElement>(null);
+
   function handleMouseMove(event) {
+    if (!svgRef.current) return;
+
+    const [mouseX, mouseY] = d3.pointer(event, svgRef.current);
     let dist = Infinity
-    const mouseX = event.nativeEvent.offsetX
-    const mouseY = event.nativeEvent.offsetY
     let activePointCurr: Point & { x_coord: number, y_coord: number } | null = null
+
     for (let line of lines) {
       for (let point of line.points) {
         const pointX = x(point.x)
@@ -220,28 +224,30 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
 
   return (
     <figure className="plot" style={{ position: 'relative', width, height }}>
-        {activePointPopup}
-        {legend}
-        <svg
-          width={width}
-          height={height}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setActivePoint(null)}
-        >
-          {boxJsx}
-          {svgpaths}
-          {dots}
-          {activePointJsx}
-          {horizontalLines}
-          {xLabels}
-          {verticalLines}
-          {yLabels}
-          {xAxisLabel}
-          {yAxisLabel}
-        </svg>
-        <figcaption>
-          {metadata.caption}.
-        </figcaption>
+      {activePointPopup}
+      {legend}
+      <svg
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${width} ${height}`}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setActivePoint(null)}
+      >
+        {boxJsx}
+        {svgpaths}
+        {dots}
+        {activePointJsx}
+        {horizontalLines}
+        {xLabels}
+        {verticalLines}
+        {yLabels}
+        {xAxisLabel}
+        {yAxisLabel}
+      </svg>
+      <figcaption>
+        {metadata.caption}.
+      </figcaption>
     </figure>
   )
 }
