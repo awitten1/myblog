@@ -20,6 +20,19 @@
   stroke: var(--binary-search-stroke);
 }
 
+path.BinarySearchRandomTarget {
+  fill: none;
+}
+
 .LinearSearch {
   stroke: var(--linear-search-stroke);
+}
+
+path.LinearSearch {
+  fill: none;
+}
+
+circle {
+  fill: var(--plot-dot);
+  stroke: var(--plot-dot);
 }

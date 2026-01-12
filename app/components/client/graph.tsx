@@ -67,7 +67,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     }
     svgpaths.push(
       (
-        <path fill="none" stroke={'black'}
+        <path fill="none"
           className={line.className} key={j} d={dstr} />
       )
     )
@@ -84,8 +84,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
       dots.push(
         (
           <circle key={`${cantor(i, j)}`} cx={x(point.x)} cy={dataHeight - y(point.y)} r={pointRadius}
-            fill="black"
-            stroke={"black"} strokeWidth={3} />
+            strokeWidth={3} />
         )
       )
     }

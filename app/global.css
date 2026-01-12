@@ -16,6 +16,7 @@
   --sh-property: #e25a1c;
   --sh-entity: #e25a1c;
   --bg-code: #f6f8fa;
+  --plot-dot: #111111;
 
   /* Syntax Highlighting (Prism) - High Contrast */
   --token-comment: #6a737d;
@@ -47,6 +48,7 @@
   --sh-keyword: #f47067;
   --sh-string: #0fa295;
   --bg-code: #0d1117;
+  --plot-dot: #ffffff;
 
   /* Syntax Highlighting (Prism Dark) - High Contrast */
   --token-comment: #8b949e;
