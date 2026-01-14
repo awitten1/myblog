@@ -91,6 +91,7 @@ body {
   margin: 0 auto;
   padding: 2rem 1rem;
   line-height: 1.6;
+  font-size: 0.95rem;
 }
 
 main {
@@ -150,6 +151,77 @@ a:hover {
 
 .tracking-tighter {
   letter-spacing: -0.05em;
+}
+
+.toc {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 0 0 2rem;
+  background: color-mix(in srgb, var(--bg) 92%, var(--fg) 8%);
+}
+
+.toc-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+  margin: 0 0 0.5rem;
+}
+
+.toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-item {
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+}
+
+.toc-item-sub {
+  padding-left: 1rem;
+  font-size: 0.9rem;
+}
+
+.toc a {
+  text-decoration: none;
+}
+
+.toc a:hover {
+  text-decoration: underline;
+}
+
+.intro {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.intro p {
+  margin: 0;
+  flex: 1;
+}
+
+.intro-photo {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .intro {
+    flex-direction: column;
+  }
+
+  .intro-photo {
+    width: 100%;
+    height: auto;
+  }
 }
 
 /* Prose for MDX */

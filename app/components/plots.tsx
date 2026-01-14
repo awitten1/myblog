@@ -52,6 +52,8 @@ export async function LinePlot({
   height,
   width,
   yaxis,
+  yaxis_expr,
+  yaxis_key,
   file,
   yaxis_pretty_string,
   caption
@@ -59,16 +61,23 @@ export async function LinePlot({
   height: number;
   width: number;
   yaxis: string;
+  yaxis_expr?: string;
+  yaxis_key?: string;
   file: string;
   yaxis_pretty_string: string;
   caption: string;
 }) {
   const connection = await DuckDBConnection.create();
 
+  const yaxisExpression = yaxis_expr || yaxis;
+  const yaxisAlias = (yaxis_key || yaxis)
+    .replaceAll('-', '_')
+    .replaceAll('"', '');
+
   function template_query(file: string) {
     return `create or replace temp table results as
         select distinct on(name)
-          ${yaxis} as ${yaxis.replaceAll('-', '_').replaceAll('"', '')},
+          ${yaxisExpression} as ${yaxisAlias},
           substr(name, position('_' in name)+1,
             position('/' in name)-position('_' in name)-1) as algorithm,
           substr(name,position('/' in name)+1,
@@ -81,19 +90,18 @@ export async function LinePlot({
   const query = template_query(file)
 
   await connection.run(query)
-  yaxis = yaxis.replaceAll('-', '_').replaceAll('"', '')
 
   let reader = await connection.runAndReadAll(`select max(input_size) max_input_size,
-    max(${yaxis}) max_yaxis from results`)
+    max(${yaxisAlias}) max_yaxis from results`)
   let { max_input_size, max_yaxis } = reader.getRowObjects()[0];
 
   async function getPoints(alg, connection, name) {
     const reader = await connection.runAndReadAll(
-      `select ${yaxis},input_size from results
+      `select ${yaxisAlias},input_size from results
       where algorithm = '${alg}'
       order by input_size asc`);
     const rows = reader.getRowObjects();
-    const points = rows.map((obj) => { return { x: obj.input_size, y: obj[yaxis] } })
+    const points = rows.map((obj) => { return { x: obj.input_size, y: obj[yaxisAlias] } })
 
     return { points, className: alg, name: name }
   }
