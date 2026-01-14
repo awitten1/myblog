@@ -76,7 +76,10 @@ BENCHMARK(BM_BinarySearchRandomTarget)->DenseRange(8,end_dense_first,1<<5)
 BENCHMARK(BM_BinarySearchPredictableTarget)->DenseRange(8,end_dense_first,1<<5)
     ->DenseRange(end_dense_first,end_dense,1<<7)
     ->RangeMultiplier(2)->Range(end_dense, end_range)
-    ->Setup([](const benchmark::State& state) { initialize_targets(targets,10,15); })
+    ->Setup([](const benchmark::State& state) {
+        long low = rand();
+        initialize_targets(targets,low,low+1000);
+    })
     ->Complexity();
 
 
