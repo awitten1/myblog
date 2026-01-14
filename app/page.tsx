@@ -8,8 +8,12 @@ export default function Page() {
       </h1>
       <div className="intro">
         <p>
-          I'm into low-level systems, performance optimization, and explaining how things work under the hood.
-          Currently exploring binary search vs. linear search metrics, DuckDB, and performance-driven blog design.
+        Hi! I'm Andrew Witten.
+        I’m a PhD student at the University of Maryland interested in database systems,
+        CPU performance, and systems in general. I previously worked as a software engineer at
+        MotherDuck and MongoDB. This blog is a place for me to write about those
+        technical topics and anything else I happen to be thinking about.
+        For fun, I enjoy running, going to the gym, and playing chess.
         </p>
         <img className="intro-photo" src="/photo.jpeg" alt="Me at Old Rag." />
       </div>
