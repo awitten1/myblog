@@ -247,3 +247,11 @@ that for array sizes so small, the entire array fits in the L1 cache, so in each
     )
   })()
 }
+
+
+The predictable case is by far the fastest!  That is because now, the CPU branch predictor is
+able to predict whether or not the branch will be taken.
+
+So the picture we have is complicated.  Whether or not linear search is faster than binary search
+on small arrays depends on your CPU and also on your access pattern.  The takeaway is that you need
+to measure the workload you care about on the CPU you care about!
