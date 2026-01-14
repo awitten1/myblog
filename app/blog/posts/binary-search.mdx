@@ -5,15 +5,16 @@ summary: 'Summary goes here.'
 ---
 
 There are two primary ways to search a sorted array for a given key: binary search and linear search.
-You are likely aware that binary search is an `O(logn)` algorithm and linear search is an `O(n)` algorithm.
-However, there are cases when for small values of `n`, when linear search is faster than binary search.
-The goal of this post is to answer when and why this is the case.
+You probably know that binary search is an `O(logn)` algorithm and linear search is an `O(n)` algorithm,
+and therefore are aware that for large enough values of `n`, binary search will be always faster.
+However, for surprisingly large values of `n`, linear search can be faster than binary search.
+The goal of this post is to answer when and why linear search can be faster than binary search.
 
 The full code for this post can be found [here](https://github.com/awitten1/myblog/tree/main/code/binary-search).
 
 ## The Code
 
-In this post we analyze the following implementations of binary search and linear search.
+In this post we analyze the following implementations of binary search and linear search:
 
 {
 (() => {
@@ -55,6 +56,7 @@ In this post we analyze the following implementations of binary search and linea
 
 ## Measurements
 
+Using Google Benchmark, I measured the performance of linear search and binary search on different array sizes.
 The following graph plots cycle counts on an AMD Ryzen 9 9900X (a Zen 5 CPU):
 
 {
@@ -73,7 +75,8 @@ The following graph plots cycle counts on an AMD Ryzen 9 9900X (a Zen 5 CPU):
   })()
 }
 
-For small arrays (fewer than 136 elements), linear search is actually faster than binary search!
+As expected, the runtime of binary search grows logarithmically and the runtime of linear search grows
+linearly. However, for small arrays (fewer than 136 elements), linear search is actually faster than binary search!
 This is despite the fact that binary search always executes fewer CPU instructions, as the following graph
 demonstrates.
 
@@ -92,8 +95,9 @@ demonstrates.
   })()
 }
 
-So what is going on here? We see that despite binary search always executing fewer instructions
-than linear search, binary search executes fewer Instructions Per Cycle (IPC) than linear search does.
+So what is going on here? If linear search is faster than binary search for small `n`, but
+always executes more instructions, then linear search must execute more Instructions Per Cycle (IPC),
+which the following chart plots:
 
 {
   (() => {
@@ -111,6 +115,19 @@ than linear search, binary search executes fewer Instructions Per Cycle (IPC) th
   })()
 }
 
+So the question is, why does linear search achieve so much higher IPC than binary search?
+The answer is branch prediction.  In order to give themselves work to do (rather than stalling the pipeline on every branch),
+modern CPUs execute instructions speculatively.  In particular, they attempt to predict whether or not
+a particular branch will be taken (on x86 CPUs, branch instructions are the various jump instructions).
+In a linear search, the branch is always false until the very last iteration, when it becomes true.
+Therefore, the CPU can easily predict the branch in linear search.  In binary search, assuming search keys are randomly
+selected, the branch is always taken with probability 1/2 and the CPU therefore cannot predict at all whether the
+branch will be taken.
+
+We can measure this behavior very precisely.  Using PMU events we can count branch mispredictions.  In linear search
+there is always exactly 1 misprediction.  In binary search, there are about $$\frac{1}{2}\log_2n$$ mispredictions.
+That's because binary search takes $$\log_2(n)$$ iterations to find the search key, and each branch is mispredicted
+with probability 1/2.  The chart below illustrates this.
 
 {
   (() => {
@@ -127,6 +144,10 @@ than linear search, binary search executes fewer Instructions Per Cycle (IPC) th
   })()
 }
 
+## Is This CPU specific?
+
+A natural question now is, does this hold for other CPU models? The following chart plots cycles
+vs array size for a Zen 2 CPU. For this CPU we observe a very similar behavior.
 
 {
   (() => {
@@ -145,23 +166,9 @@ than linear search, binary search executes fewer Instructions Per Cycle (IPC) th
 }
 
 
-{
-  (() => {
-    let width = 800;
-    let height = 550;
-    return (
-      <>
-      <LinePlot height={height} width={width} yaxis={'\"branch-misses\"'}
-        file={'/code/binary-search/results/amdzen2/branches.csv'}
-        yaxis_pretty_string={'Branch Misses'}
-        caption={'Branch prediction misses on different array sizes on an AMD Zen 2 CPU'}/>
-      </>
-    )
-  })()
-}
 
-
-Some random text in between.
+But how about on a MacBook Pro?  On my M2 MacBook Pro, binary search was always faster than linear search!
+The following chart illustrates this (here we plot real-time instead of cycles because the perf events API is Linux-specific).
 
 {
   (() => {
@@ -176,4 +183,67 @@ Some random text in between.
   })()
 }
 
+Likewise, on my Raspberry Pi 4, binary search is always faster.  So the takeaway, is that you need
+to measure it on whatever platform you care about!
 
+
+{
+  (() => {
+    let width = 800;
+    let height = 550;
+    return (
+      <>
+      <LinePlot height={height} width={width} yaxis={'cycles'}
+        file={'/code/binary-search/results/raspi/cycles.csv'}
+        yaxis_pretty_string={'Cycles'}
+        caption={'Cycle counts on different array sizes on a Raspberry Pi 4'}/>
+
+      </>
+    )
+  })()
+}
+
+## Is this Workload Dependent?
+
+In our previous measurements, I measured the runtime of binary search for randomly selected search keys.
+However, it's very possible that in a real life workload the search keys would not be randomly selected,
+and instead we would be repeatedly searching the same array for the values in the same range.
+
+In this case, it's very possible that branch predictor could do a much better job predicting the branch
+in the binary search.
+
+The plot below compares cycles for random binary search, predictable binary search, and linear search.
+The predictable binary search case is taken to the extreme, where we repeatedly search for the same value (also note
+that for array sizes so small, the entire array fits in the L1 cache, so in each case there are no cache misses).
+
+{
+  (() => {
+    let width = 800;
+    let height = 550;
+    return (
+      <>
+      <LinePlot height={height} width={width} yaxis={'cycles'}
+        file={'/code/binary-search/results/amdzen5/cycles.csv'}
+        yaxis_pretty_string={'Cycles'}
+        caption={'Cycles vs. input size on an AMD Zen 5 CPU'}
+        series={[
+          {
+            name: 'Random Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'Predictable Binary Search',
+            className: 'BinarySearchPredictableTarget',
+            algorithm: 'BinarySearchPredictableTarget',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
+      </>
+    )
+  })()
+}

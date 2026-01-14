@@ -1,11 +1,13 @@
 :root {
   --binary-search-stroke: #ef4444;
   --linear-search-stroke: #0f172a;
+  --binary-search-predictable-stroke: #059669;
 }
 
 [data-theme='dark'] {
   --binary-search-stroke: #f87171;
   --linear-search-stroke: #94a3b8;
+  --binary-search-predictable-stroke: #34d399;
 }
 
 .legend-swatch.BinarySearchRandomTarget {
@@ -14,6 +16,10 @@
 
 .legend-swatch.LinearSearch {
   background-color: var(--linear-search-stroke);
+}
+
+.legend-swatch.BinarySearchPredictableTarget {
+  background-color: var(--binary-search-predictable-stroke);
 }
 
 .BinarySearchRandomTarget {
@@ -29,6 +35,14 @@ path.BinarySearchRandomTarget {
 }
 
 path.LinearSearch {
+  fill: none;
+}
+
+.BinarySearchPredictableTarget {
+  stroke: var(--binary-search-predictable-stroke);
+}
+
+path.BinarySearchPredictableTarget {
   fill: none;
 }
 

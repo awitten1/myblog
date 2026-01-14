@@ -55,6 +55,7 @@ export async function LinePlot({
   yaxis_expr,
   yaxis_key,
   file,
+  series,
   yaxis_pretty_string,
   caption
 }: {
@@ -64,6 +65,12 @@ export async function LinePlot({
   yaxis_expr?: string;
   yaxis_key?: string;
   file: string;
+  series?: {
+    name: string;
+    className?: string;
+    algorithm?: string;
+    where?: string;
+  }[];
   yaxis_pretty_string: string;
   caption: string;
 }) {
@@ -91,24 +98,61 @@ export async function LinePlot({
 
   await connection.run(query)
 
-  let reader = await connection.runAndReadAll(`select max(input_size) max_input_size,
-    max(${yaxisAlias}) max_yaxis from results`)
-  let { max_input_size, max_yaxis } = reader.getRowObjects()[0];
+  function getSeriesFilter(seriesItem: {
+    name: string;
+    className?: string;
+    algorithm?: string;
+    where?: string;
+  }) {
+    if (seriesItem.where) {
+      return seriesItem.where
+    }
 
-  async function getPoints(alg, connection, name) {
+    if (seriesItem.algorithm) {
+      return `algorithm = '${seriesItem.algorithm}'`
+    }
+
+    throw new Error('LinePlot series requires an algorithm or where clause.')
+  }
+
+  const seriesList = series ?? [
+    {
+      name: 'Binary Search',
+      className: 'BinarySearchRandomTarget',
+      algorithm: 'BinarySearchRandomTarget',
+    },
+    {
+      name: 'Linear Search',
+      className: 'LinearSearch',
+      algorithm: 'LinearSearch',
+    },
+  ]
+
+  const seriesFilters = seriesList.map((seriesItem) => getSeriesFilter(seriesItem))
+  const seriesWhere = seriesFilters.map((filter) => `(${filter})`).join(' OR ')
+
+  async function getPoints(filter: string, name: string, className: string) {
     const reader = await connection.runAndReadAll(
       `select ${yaxisAlias},input_size from results
-      where algorithm = '${alg}'
+      where ${filter}
       order by input_size asc`);
     const rows = reader.getRowObjects();
     const points = rows.map((obj) => { return { x: obj.input_size, y: obj[yaxisAlias] } })
 
-    return { points, className: alg, name: name }
+    return { points, className, name }
   }
 
+  let reader = await connection.runAndReadAll(`select max(input_size) max_input_size,
+    max(${yaxisAlias}) max_yaxis from results
+    where ${seriesWhere}`)
+  let { max_input_size, max_yaxis } = reader.getRowObjects()[0];
+
   let lines: Line[] = []
-  lines.push(await getPoints('BinarySearchRandomTarget', connection, 'Binary Search'))
-  lines.push(await getPoints('LinearSearch', connection, 'Linear Search'))
+  for (let seriesItem of seriesList) {
+    const filter = getSeriesFilter(seriesItem)
+    const className = seriesItem.className || seriesItem.algorithm || seriesItem.name
+    lines.push(await getPoints(filter, seriesItem.name, className))
+  }
 
   return (
     <div className={'plotWrapper'}>
