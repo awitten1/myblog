@@ -137,7 +137,12 @@ export async function LinePlot({
       where ${filter}
       order by input_size asc`);
     const rows = reader.getRowObjects();
-    const points = rows.map((obj) => { return { x: obj.input_size, y: obj[yaxisAlias] } })
+    const points = rows
+      .map((obj) => ({
+        x: Number(obj.input_size),
+        y: Number(obj[yaxisAlias]),
+      }))
+      .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
 
     return { points, className, name }
   }
