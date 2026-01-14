@@ -53,6 +53,14 @@ export default function RootLayout({
         GeistMono.variable
       )}
     >
+      <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Andrew Witten's Blog"
+          href={`${baseUrl}/rss`}
+        />
+      </head>
       <body className={cx(GeistSans.variable, GeistMono.variable)}>
         <script
           dangerouslySetInnerHTML={{

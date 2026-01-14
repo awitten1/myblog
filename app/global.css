@@ -1,10 +1,10 @@
 :root {
-  --bg: #fdfdfd;
-  --fg: #111111;
-  --fg-muted: #666666;
-  --accent: #0070f3;
-  --border: #eaeaea;
-  --selection-bg: #47a3f3;
+  --bg: #f3f2ef;
+  --fg: #2d2a26;
+  --fg-muted: #7a7470;
+  --accent: #5b7ca6;
+  --border: #d6d2cd;
+  --selection-bg: #9ab4d8;
 
   --sh-class: #2d5e9d;
   --sh-identifier: #354150;
@@ -36,12 +36,12 @@
 }
 
 [data-theme='dark'] {
-  --bg: #050505;
-  --fg: #eeeeee;
-  --fg-muted: #999999;
-  --accent: #3b82f6;
-  --border: #222222;
-  --selection-bg: #1e40af;
+  --bg: #15181c;
+  --fg: #dcd6cf;
+  --fg-muted: #b2aba3;
+  --accent: #9db2c9;
+  --border: #3a3f46;
+  --selection-bg: #3c536b;
 
   --sh-class: #4c97f8;
   --sh-identifier: #ffffff;
