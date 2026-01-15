@@ -14,7 +14,7 @@ The full code for this post can be found [here](https://github.com/awitten1/mybl
 
 ## The Code
 
-In this post we analyze the following implementations of binary search and linear search (compiled with O3 and march=native).  For completeness,
+In this post we analyze the following implementations of binary search and linear search (compiled with O3 and march=native on each platform).  For completeness,
 we will also compare these implementations with `std::lower_bound`.
 
 {
@@ -377,6 +377,11 @@ that for array sizes so small, the entire array fits in the L1 cache, so in each
 The predictable case is by far the fastest!  That is because now, the CPU branch predictor is
 able to predict whether or not the branch will be taken.
 
+## Conclusion
+
 So the picture we have is complicated.  Whether or not linear search is faster than binary search
 on small arrays depends on your CPU and also on your access pattern.  The takeaway is that you need
 to measure the workload you care about on the CPU you care about!
+
+I should mention also that it's possible to implement a [branchless binary search](https://probablydance.com/2023/04/27/beautiful-branchless-binary-search/)!
+This blog post only applies to binary search with branches!
