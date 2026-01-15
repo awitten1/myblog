@@ -19,6 +19,34 @@ import './plot.css'
 
 /**
 
+create temp table results as
+with bad_speculation as (
+  select name,
+    "perf_raw::r4307AA" as macroops_dispatched,
+    "perf_raw::r4300C1" macroops_retired,
+    "perf_raw::r430076"*8 as dispatch_slots
+  from 'results/amdzen5/bad_speculation.csv'
+),
+frontend_backend_speculation as (
+  select name,
+    "perf_raw::r100431EA0" as unused_dispatch_slots_backend,
+    "perf_raw::r1004301A0" as unused_dispatch_slots_frontend,
+    "perf_raw::r430076"*8 as dispatch_slots
+  from 'results/amdzen5/frontend_backend_bound.csv'
+),
+frontend_level2 as (
+  select name,
+    "perf_raw::r1084301A0" as frontend_raw
+  from 'results/amdzen5/frontend_backend_bound_level2.csv'
+)
+from bad_speculation b join frontend_backend_speculation f using(name)
+  join frontend_level2 f2 using(name)
+select f.name,f.dispatch_slots,unused_dispatch_slots_backend,
+  unused_dispatch_slots_frontend, macroops_retired, macroops_dispatched,
+  frontend_raw
+
+
+
 create temp table bad_speculation as
   select name,
     "perf_raw::r4307AA" as macroops_dispatched,

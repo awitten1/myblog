@@ -1,13 +1,15 @@
 :root {
-  --binary-search-stroke: #ef4444;
-  --linear-search-stroke: #0f172a;
-  --binary-search-predictable-stroke: #059669;
+  --binary-search-stroke: #f28b82;
+  --linear-search-stroke: #475569;
+  --binary-search-predictable-stroke: #34a27a;
+  --std-lower-bound-stroke: #6fa0f6;
 }
 
 [data-theme='dark'] {
-  --binary-search-stroke: #f87171;
-  --linear-search-stroke: #94a3b8;
-  --binary-search-predictable-stroke: #34d399;
+  --binary-search-stroke: #f1a7a3;
+  --linear-search-stroke: #c3cedb;
+  --binary-search-predictable-stroke: #66d2ab;
+  --std-lower-bound-stroke: #95bdfa;
 }
 
 .legend-swatch.BinarySearchRandomTarget {
@@ -20,6 +22,10 @@
 
 .legend-swatch.BinarySearchPredictableTarget {
   background-color: var(--binary-search-predictable-stroke);
+}
+
+.legend-swatch.StdLowerBound {
+  background-color: var(--std-lower-bound-stroke);
 }
 
 .BinarySearchRandomTarget {
@@ -43,6 +49,14 @@ path.LinearSearch {
 }
 
 path.BinarySearchPredictableTarget {
+  fill: none;
+}
+
+.StdLowerBound {
+  stroke: var(--std-lower-bound-stroke);
+}
+
+path.StdLowerBound {
   fill: none;
 }
 

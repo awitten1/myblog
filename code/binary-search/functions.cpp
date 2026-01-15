@@ -26,7 +26,7 @@ size_t binary_search(const std::vector<long>& vec, long target) {
     size_t low = 0, high = vec.size();
 
     while (low < high) {
-        size_t mid = low + (high - low)/2;
+        size_t mid = (low+high)/2;
         if (vec[mid] < target) {
             low = mid + 1;
         } else {

@@ -35,6 +35,16 @@ if [ $(uname -s) = 'Linux' ]; then
                    > results/amdzen5/frontend_backend_bound.csv
 
 
+        # 1084301A0 = fraction of dispatch slots that remain unused due to a frontend latency issue
+        #     such as i cache or iTLB cache.
+        # Frontend bound latency: 8 * Event[1084301A0] / Total Dispatch Slots
+        # Frontend bound bandwidth: Event[1004301A0] – (8 * Event[1084301A0] ) / Total Dispatch Slots
+        #
+        # ./build/main --benchmark_format=csv \
+        #            --benchmark_perf_counters=perf_raw::r1084301A0,perf_raw::r43A2D6,perf_raw::r4302D6 \
+        #            > results/amdzen5/frontend_backend_bound_level2.csv
+
+
     elif [[ ${cpu_model} == *'3995WX'* ]]; then
          ./build/main --benchmark_format=csv \
             --benchmark_perf_counters=instructions,cycles > results/amdzen2/cycles.csv

@@ -14,7 +14,8 @@ The full code for this post can be found [here](https://github.com/awitten1/mybl
 
 ## The Code
 
-In this post we analyze the following implementations of binary search and linear search (compiled with O3 and march=native):
+In this post we analyze the following implementations of binary search and linear search (compiled with O3 and march=native).  For completeness,
+we will also compare these implementations with `std::lower_bound`.
 
 {
 (() => {
@@ -24,7 +25,7 @@ In this post we analyze the following implementations of binary search and linea
       size_t low = 0, high = vec.size();
 
       while (low < high) {
-          size_t mid = low + (high - low)/2;
+          size_t mid = (low+high)/2;
           if (vec[mid] < target) {
               low = mid + 1;
           } else {
@@ -68,16 +69,33 @@ The following graph plots cycle counts on an AMD Ryzen 9 9900X (a Zen 5 CPU):
       <LinePlot height={height} width={width} yaxis={'cycles'}
         file={'/code/binary-search/results/amdzen5/cycles.csv'}
         yaxis_pretty_string={'Cycles'}
-        caption={'Cycle counts on different array sizes on an AMD Zen 5 CPU'}/>
-
+        caption={'std::lower_bound vs custom search implementations on an AMD Zen 5 CPU'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
       </>
     )
   })()
 }
 
 As expected, the runtime of binary search grows logarithmically and the runtime of linear search grows
-linearly. However, for small arrays (fewer than 136 elements), linear search is actually faster than binary search!
-This is despite the fact that binary search always executes fewer CPU instructions, as the following graph
+linearly. However, for small arrays (fewer than 136 elements), linear search is actually faster than binary search!  `std::lower_bound`
+performs better than our binary search implementation but still performs worse than linear search for small enough `n`.
+Despite this, binary search always executes fewer CPU instructions, as the following graph
 demonstrates.
 
 {
@@ -89,7 +107,24 @@ demonstrates.
       <LinePlot height={height} width={width} yaxis={'instructions'}
         file={'/code/binary-search/results/amdzen5/cycles.csv'}
         yaxis_pretty_string={'Instructions'}
-        caption={'Instruction counts on different array sizes on an AMD Zen 5 CPU'}/>
+        caption={'Instruction counts on different array sizes on an AMD Zen 5 CPU'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
       </>
     )
   })()
@@ -109,7 +144,24 @@ which the following chart plots:
         yaxis_expr={'instructions / cycles'} yaxis_key={'ipc'}
         file={'/code/binary-search/results/amdzen5/cycles.csv'}
         yaxis_pretty_string={'IPC'}
-        caption={'Instructions per cycle on different array sizes on an AMD Zen 5 CPU'}/>
+        caption={'Instructions per cycle on different array sizes on an AMD Zen 5 CPU'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
       </>
     )
   })()
@@ -138,7 +190,24 @@ with probability 1/2.  The chart below illustrates this.
       <LinePlot height={height} width={width} yaxis={'\"branch-misses\"'}
         file={'/code/binary-search/results/amdzen5/branches.csv'}
         yaxis_pretty_string={'Branch Prediction Misses'}
-        caption={'Branch prediction misses on different array sizes on an AMD Zen 5 CPU'}/>
+        caption={'Branch prediction misses on different array sizes on an AMD Zen 5 CPU'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
       </>
     )
   })()
@@ -158,7 +227,24 @@ vs array size for a Zen 2 CPU. For this CPU we observe a very similar behavior.
       <LinePlot height={height} width={width} yaxis={'cycles'}
         file={'/code/binary-search/results/amdzen2/cycles.csv'}
         yaxis_pretty_string={'Cycles'}
-        caption={'Cycle counts on different array sizes on an AMD Zen 2 CPU'}/>
+        caption={'Cycle counts on different array sizes on an AMD Zen 2 CPU'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
 
       </>
     )
@@ -178,7 +264,24 @@ The following chart illustrates this (here we plot real-time instead of cycles b
       <LinePlot height={height} width={width} yaxis={'real_time'}
         file={'/code/binary-search/results/macbookpro/results.csv'}
         yaxis_pretty_string={'Real Time (ns)'}
-        caption={'Real time different array sizes on a MacBook Pro'}/>
+        caption={'Real time different array sizes on a MacBook Pro'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
     )
   })()
 }
@@ -196,7 +299,24 @@ to measure it on whatever platform you care about!
       <LinePlot height={height} width={width} yaxis={'cycles'}
         file={'/code/binary-search/results/raspi/cycles.csv'}
         yaxis_pretty_string={'Cycles'}
-        caption={'Cycle counts on different array sizes on a Raspberry Pi 4'}/>
+        caption={'Cycle counts on different array sizes on a Raspberry Pi 4'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
 
       </>
     )
@@ -231,6 +351,11 @@ that for array sizes so small, the entire array fits in the L1 cache, so in each
             name: 'Random Binary Search',
             className: 'BinarySearchRandomTarget',
             algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
           },
           {
             name: 'Predictable Binary Search',

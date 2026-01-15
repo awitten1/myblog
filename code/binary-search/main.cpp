@@ -35,6 +35,20 @@ static void BM_BinarySearch(benchmark::State& state) {
     state.SetComplexityN(N);
 }
 
+static void BM_StdLowerBound(benchmark::State& state) {
+    size_t N = state.range(0);
+    auto nums = get_nums(N);
+    std::sort(nums.begin(), nums.end());
+
+    uint64_t i = 0;
+    for (auto _ : state) {
+        long target = targets[i++ & (target_vec_size - 1)];
+        auto it = std::lower_bound(nums.begin(), nums.end(), target);
+        benchmark::DoNotOptimize(it);
+    }
+    state.SetComplexityN(N);
+}
+
 static void BM_BinarySearchRandomTarget(benchmark::State& state) {
     BM_BinarySearch(state);
 }
@@ -59,6 +73,13 @@ static void BM_LinearSearch(benchmark::State& state) {
 const long end_dense_first = 1 << 8;
 const long end_dense = 1 << 11;
 const long end_range = 1 << 18;
+
+
+BENCHMARK(BM_StdLowerBound)->DenseRange(8,end_dense_first,1<<5)
+    ->DenseRange(end_dense_first,end_dense,1<<7)
+    ->RangeMultiplier(2)->Range(end_dense, end_range)
+    ->Setup([](const benchmark::State& state) { initialize_targets(targets); })
+    ->Complexity();
 
 BENCHMARK(BM_LinearSearch)->DenseRange(8,end_dense_first,1<<5)
     ->DenseRange(end_dense_first,end_dense,1<<7)
