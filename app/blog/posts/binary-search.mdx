@@ -170,7 +170,7 @@ which the following chart plots:
 So the question is, why does linear search achieve so much higher IPC than binary search?
 The answer is branch prediction.  In order to give themselves work to do (rather than stalling the pipeline on every branch),
 modern CPUs execute instructions speculatively.  In particular, they attempt to predict whether or not
-a particular branch will be taken (on x86 CPUs, branch instructions are the various jump instructions).
+a particular branch will be taken.
 In a linear search, the branch is always false until the very last iteration, when it becomes true.
 Therefore, the CPU can easily predict the branch in linear search.  In binary search, assuming search keys are randomly
 selected, the branch is always taken with probability 1/2 and the CPU therefore cannot predict at all whether the
