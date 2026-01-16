@@ -53,22 +53,6 @@ we will also compare these implementations with `std::lower_bound`.
       }
       return idx;
   }
-
-  size_t branchless_binary_search(const std::vector<long>& vec, long target) {
-      if (vec.empty()) {
-          return 0;
-      }
-
-      const long* base = vec.data();
-      size_t length = vec.size();
-
-      while (length > 1) {
-          size_t half = length >> 1;
-          base = base[half] >= target ? base : base + half;
-          length -= half;
-      }
-      return (base - vec.data()) + (*base < target);
-  }
   `
   return (
     <SyntaxHighlighter language={"cpp"}>
