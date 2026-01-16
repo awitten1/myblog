@@ -2,7 +2,7 @@
   --bg: #f3f2ef;
   --fg: #2d2a26;
   --fg-muted: #7a7470;
-  --accent: #5b7ca6;
+  --accent: #2e3f55;
   --border: #d6d2cd;
   --selection-bg: #9ab4d8;
 
@@ -91,7 +91,7 @@ body {
   margin: 0 auto;
   padding: 2rem 1rem;
   line-height: 1.6;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 main {

@@ -111,8 +111,8 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     <div className={'popup'} style={{
       position: 'absolute',
       zIndex: 1000,
-      top: activePoint.y_coord - 10,
-      left: activePoint.x_coord + 10,
+      top: y(activePoint.y_coord + 50),
+      left: x(activePoint.x_coord + 50),
       pointerEvents: 'none'
     }}>
       <div className="popup-label">{metadata.xName}: <strong>{formatValue(activePoint.x)}</strong></div>
