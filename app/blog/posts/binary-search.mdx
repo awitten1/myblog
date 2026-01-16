@@ -12,6 +12,15 @@ The goal of this post is to answer when and why linear search can be faster than
 
 The full code for this post can be found [here](https://github.com/awitten1/myblog/tree/main/code/binary-search).
 
+## Contents
+
+- [The Code](#the-code)
+- [Measurements](#measurements)
+- [Is This CPU specific?](#is-this-cpu-specific)
+- [Is this Workload Dependent?](#is-this-workload-dependent)
+- [What About Branch-Free Binary Search?](#what-about-branch-free-binary-search)
+- [Conclusion](#conclusion)
+
 ## The Code
 
 In this post we analyze the following implementations of binary search and linear search (compiled with O3 and march=native on each platform).  For completeness,
@@ -44,6 +53,22 @@ we will also compare these implementations with `std::lower_bound`.
       }
       return idx;
   }
+
+  size_t branchless_binary_search(const std::vector<long>& vec, long target) {
+      if (vec.empty()) {
+          return 0;
+      }
+
+      const long* base = vec.data();
+      size_t length = vec.size();
+
+      while (length > 1) {
+          size_t half = length >> 1;
+          base = base[half] >= target ? base : base + half;
+          length -= half;
+      }
+      return (base - vec.data()) + (*base < target);
+  }
   `
   return (
     <SyntaxHighlighter language={"cpp"}>
@@ -62,14 +87,14 @@ The following graph plots cycle counts on an AMD Ryzen 9 9900X (a Zen 5 CPU):
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <>
       <LinePlot height={height} width={width} yaxis={'cycles'}
         file={'/code/binary-search/results/amdzen5/cycles.csv'}
         yaxis_pretty_string={'Cycles'}
-        caption={'std::lower_bound vs custom search implementations on an AMD Zen 5 CPU'}
+        caption={'Binary Search Performance on an AMD Zen 5 CPU'}
         series={[
           {
             name: 'Binary Search',
@@ -100,7 +125,7 @@ demonstrates.
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <>
@@ -136,7 +161,7 @@ which the following chart plots:
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <>
@@ -183,7 +208,7 @@ with probability 1/2.  The chart below illustrates this.
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <>
@@ -220,7 +245,7 @@ vs array size for a Zen 2 CPU. For this CPU we observe a very similar behavior.
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <>
@@ -258,7 +283,7 @@ The following chart illustrates this (here we plot real-time instead of cycles b
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <LinePlot height={height} width={width} yaxis={'real_time'}
@@ -292,7 +317,7 @@ to measure it on whatever platform you care about!
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <>
@@ -338,7 +363,7 @@ that for array sizes so small, the entire array fits in the L1 cache, so in each
 
 {
   (() => {
-    let width = 800;
+    let width = 900;
     let height = 550;
     return (
       <>
@@ -377,11 +402,82 @@ that for array sizes so small, the entire array fits in the L1 cache, so in each
 The predictable case is by far the fastest!  That is because now, the CPU branch predictor is
 able to predict whether or not the branch will be taken.
 
+## What About Branch-free Binary Search?
+
+Now is the point in the blog when I admit to you that it's possible to implement a branch-free binary search.
+
+{
+(() => {
+
+  const code = `
+  size_t branchless_binary_search(const std::vector<long>& vec, long target) {
+      if (vec.empty()) {
+          return 0;
+      }
+
+      const long* base = vec.data();
+      size_t length = vec.size();
+
+      while (length > 1) {
+          size_t half = length >> 1;
+          base = base[half] >= target ? base : base + half;
+          length -= half;
+      }
+      return (base - vec.data()) + (*base < target);
+  }
+  `
+  return (
+    <SyntaxHighlighter language={"cpp"}>
+    {code}
+    </SyntaxHighlighter>
+  )
+})()
+}
+
+In this version of binary search, the compiler generates a `cmov` instruction instead of a jump instruction (the branch instruction).
+As a result, this code results in no branches at all.  We see below, that this version is the fastest of all of them!
+
+{
+  (() => {
+    let width = 900;
+    let height = 550;
+    return (
+      <>
+      <LinePlot height={height} width={width} yaxis={'cycles'}
+        file={'/code/binary-search/results/amdzen5/cycles.csv'}
+        yaxis_pretty_string={'Cycles'}
+        caption={'Binary Search performance on an AMD Zen 5 CPU'}
+        series={[
+          {
+            name: 'Binary Search',
+            className: 'BinarySearchRandomTarget',
+            algorithm: 'BinarySearchRandomTarget',
+          },
+          {
+            name: 'Branchless Binary Search',
+            className: 'BranchlessBinarySearchRandomTarget',
+            algorithm: 'BranchlessBinarySearchRandomTarget',
+          },
+          {
+            name: 'std::lower_bound',
+            className: 'StdLowerBound',
+            algorithm: 'StdLowerBound',
+          },
+          {
+            name: 'Linear Search',
+            className: 'LinearSearch',
+            algorithm: 'LinearSearch',
+          },
+        ]}/>
+      </>
+    )
+  })()
+}
+
 ## Conclusion
 
-So the picture we have is complicated.  Whether or not linear search is faster than binary search
-on small arrays depends on your CPU and also on your access pattern.  The takeaway is that you need
-to measure the workload you care about on the CPU you care about!
+So the picture we have is complicated.  A branch-free binary search implementation will likely always outperform
+a linear search.  But if your binary search has branches (the way `std::lower_bound` does) then
+linear search may be faster than binary search for small arrays with a random access pattern on some CPUs.
+The takeaway is that you need to measure it!
 
-I should mention also that it's possible to implement a [branchless binary search](https://probablydance.com/2023/04/27/beautiful-branchless-binary-search/)!
-This blog post only applies to binary search with branches!

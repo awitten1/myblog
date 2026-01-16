@@ -1,5 +1,6 @@
 :root {
   --binary-search-stroke: #f28b82;
+  --branchless-binary-search-stroke: #f59e0b;
   --linear-search-stroke: #475569;
   --binary-search-predictable-stroke: #34a27a;
   --std-lower-bound-stroke: #6fa0f6;
@@ -7,6 +8,7 @@
 
 [data-theme='dark'] {
   --binary-search-stroke: #f1a7a3;
+  --branchless-binary-search-stroke: #fbbf24;
   --linear-search-stroke: #c3cedb;
   --binary-search-predictable-stroke: #66d2ab;
   --std-lower-bound-stroke: #95bdfa;
@@ -14,6 +16,10 @@
 
 .legend-swatch.BinarySearchRandomTarget {
   background-color: var(--binary-search-stroke);
+}
+
+.legend-swatch.BranchlessBinarySearchRandomTarget {
+  background-color: var(--branchless-binary-search-stroke);
 }
 
 .legend-swatch.LinearSearch {
@@ -33,6 +39,14 @@
 }
 
 path.BinarySearchRandomTarget {
+  fill: none;
+}
+
+.BranchlessBinarySearchRandomTarget {
+  stroke: var(--branchless-binary-search-stroke);
+}
+
+path.BranchlessBinarySearchRandomTarget {
   fill: none;
 }
 

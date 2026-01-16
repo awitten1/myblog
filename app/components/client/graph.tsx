@@ -222,7 +222,7 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
   )
 
   return (
-    <figure className="plot" style={{ position: 'relative', width, height }}>
+    <figure className="plot" style={{ position: 'relative', width: '100%', height }}>
       {activePointPopup}
       {legend}
       <svg

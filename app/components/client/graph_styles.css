@@ -37,9 +37,8 @@ figure.plot {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: calc(100vw - 2rem);
-  left: 50%;
-  transform: translateX(-50%);
+  width: 100%;
+  max-width: min(1100px, calc(100vw - 2rem));
 }
 
 figure.plot>svg {
@@ -58,8 +57,11 @@ figure.plot>figcaption {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  width: 100vw;
   margin: 2rem 0;
+  position: relative;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 }
 
 .plotRect {
@@ -77,8 +79,8 @@ figure.plot>figcaption {
   gap: 16px;
   margin-bottom: 12px;
   width: 100%;
-  justify-content: flex-end;
-  padding-right: 50px;
+  justify-content: center;
+  flex-wrap: wrap;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: 0.9rem;
 }
