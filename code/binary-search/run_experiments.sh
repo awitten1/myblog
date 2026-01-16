@@ -24,15 +24,15 @@ if [ $(uname -s) = 'Linux' ]; then
         # Up to 8 instructions can be dispatched in a single cycle.
         # Macro-ops Dispatched = 4307AA
         # Macro-ops Retired = 4300C1
-        ./build/main --benchmark_format=csv \
-                   --benchmark_perf_counters=perf_raw::r4307AA,perf_raw::r4300C1,perf_raw::r430076 \
-                   > results/amdzen5/bad_speculation.csv
+        # ./build/main --benchmark_format=csv \
+        #            --benchmark_perf_counters=perf_raw::r4307AA,perf_raw::r4300C1,perf_raw::r430076 \
+        #            > results/amdzen5/bad_speculation.csv
 
         # 100431EA0 = backend bound = dispatch slots that are unused because of backend stalls.
         # 1004301A0 = dispatch slots that are unused becausee frontend didn't supply enough macro-ops
-        ./build/main --benchmark_format=csv \
-                   --benchmark_perf_counters=perf_raw::r430076,perf_raw::r100431EA0,perf_raw::r1004301A0 \
-                   > results/amdzen5/frontend_backend_bound.csv
+        # ./build/main --benchmark_format=csv \
+        #            --benchmark_perf_counters=perf_raw::r430076,perf_raw::r100431EA0,perf_raw::r1004301A0 \
+        #            > results/amdzen5/frontend_backend_bound.csv
 
 
         # 1084301A0 = fraction of dispatch slots that remain unused due to a frontend latency issue
