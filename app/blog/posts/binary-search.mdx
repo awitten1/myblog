@@ -6,8 +6,8 @@ summary: 'Summary goes here.'
 
 There are two primary ways to search a sorted array for a given key: binary search and linear search.
 You probably know that binary search is an `O(logn)` algorithm and linear search is an `O(n)` algorithm,
-and therefore are aware that for large enough values of `n`, binary search will be always faster.
-However, for surprisingly large values of `n`, linear search can be faster than binary search.
+and therefore for large enough values of `n`, binary search will be always faster.
+However, for small enough values of `n`, linear search can be faster than binary search.
 The goal of this post is to answer when and why linear search can be faster than binary search.
 
 The full code for this post can be found [here](https://github.com/awitten1/myblog/tree/main/code/binary-search).
@@ -404,7 +404,9 @@ able to predict whether or not the branch will be taken.
 
 ## What About Branch-free Binary Search?
 
-Now is the point in the blog when I admit to you that it's possible to implement a branch-free binary search.
+If branch mispredictions are the bottleneck, what if we could eliminate branches entirely?
+CPUs support conditional move instructions (`cmov` on x86) that avoid
+branching altogether. This allows us to implement a branch-free binary search:
 
 {
 (() => {
