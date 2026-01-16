@@ -1,17 +1,17 @@
 :root {
-  --binary-search-stroke: #f28b82;
-  --branchless-binary-search-stroke: #f59e0b;
-  --linear-search-stroke: #475569;
-  --binary-search-predictable-stroke: #34a27a;
-  --std-lower-bound-stroke: #6fa0f6;
+  --binary-search-stroke: #e29a93;
+  --branchless-binary-search-stroke: #e3b063;
+  --linear-search-stroke: #6b7280;
+  --binary-search-predictable-stroke: #5aa985;
+  --std-lower-bound-stroke: #8aa9e8;
 }
 
 [data-theme='dark'] {
-  --binary-search-stroke: #f1a7a3;
-  --branchless-binary-search-stroke: #fbbf24;
-  --linear-search-stroke: #c3cedb;
-  --binary-search-predictable-stroke: #66d2ab;
-  --std-lower-bound-stroke: #95bdfa;
+  --binary-search-stroke: #e0a6a1;
+  --branchless-binary-search-stroke: #d7b36a;
+  --linear-search-stroke: #b8c1cd;
+  --binary-search-predictable-stroke: #7fc9a9;
+  --std-lower-bound-stroke: #9db7f0;
 }
 
 .legend-swatch.BinarySearchRandomTarget {

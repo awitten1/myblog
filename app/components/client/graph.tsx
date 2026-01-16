@@ -30,6 +30,16 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
 
   const [activePoint, setActivePoint] = useState<(Point & { x_coord: number, y_coord: number }) | null>(null)
 
+  function formatValue(value: number): string {
+    if (!Number.isFinite(value)) {
+      return String(value)
+    }
+    if (Number.isInteger(value)) {
+      return String(value)
+    }
+    return value.toFixed(2).replace(/\.?0+$/, '')
+  }
+
   maxx *= 1.00
   maxy *= 1.05
   for (let line of lines) {
@@ -105,8 +115,8 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
       left: activePoint.x_coord + 10,
       pointerEvents: 'none'
     }}>
-      <div className="popup-label">{metadata.xName}: <strong>{activePoint.x}</strong></div>
-      <div className="popup-label">{metadata.yName}: <strong>{activePoint.y}</strong></div>
+      <div className="popup-label">{metadata.xName}: <strong>{formatValue(activePoint.x)}</strong></div>
+      <div className="popup-label">{metadata.yName}: <strong>{formatValue(activePoint.y)}</strong></div>
     </div>
   )
 
