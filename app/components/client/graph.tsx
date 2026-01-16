@@ -5,6 +5,7 @@ import * as d3 from 'd3';
 import './graph_styles.css'
 
 export interface Point {
+  name: string;
   x: number;
   y: number;
 }
@@ -111,10 +112,11 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
     <div className={'popup'} style={{
       position: 'absolute',
       zIndex: 1000,
-      top: y(activePoint.y_coord + 50),
-      left: x(activePoint.x_coord + 50),
+      top: activePoint.y_coord + 20,
+      left: activePoint.x_coord + 20,
       pointerEvents: 'none'
     }}>
+      <div className="popup-label"><strong>{activePoint.name}</strong></div>
       <div className="popup-label">{metadata.xName}: <strong>{formatValue(activePoint.x)}</strong></div>
       <div className="popup-label">{metadata.yName}: <strong>{formatValue(activePoint.y)}</strong></div>
     </div>
@@ -206,7 +208,8 @@ export function LinePlotClient({ lines, height, width, maxx, maxy, metadata }:
             x: point.x,
             y: point.y,
             x_coord: pointX,
-            y_coord: pointY
+            y_coord: pointY,
+            name: line.name,
           }
           dist = currDist
         }

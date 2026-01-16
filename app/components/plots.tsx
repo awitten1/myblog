@@ -169,6 +169,7 @@ export async function LinePlot({
       .map((obj) => ({
         x: Number(obj.input_size),
         y: Number(obj[yaxisAlias]),
+        name
       }))
       .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
 

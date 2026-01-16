@@ -34,6 +34,8 @@ we will also compare these implementations with `std::lower_bound`.
       size_t low = 0, high = vec.size();
 
       while (low < high) {
+          // Interestingly (low+high)/2 is measurably faster \
+          // for small arrays than low + (high - low)/2
           size_t mid = (low+high)/2;
           if (vec[mid] < target) {
               low = mid + 1;
@@ -66,7 +68,7 @@ we will also compare these implementations with `std::lower_bound`.
 
 ## Measurements
 
-Using Google Benchmark, I measured the performance of linear search and binary search on different array sizes.
+Using Google Benchmark, I measured the performance of the linear search and binary search on different array sizes.
 The following graph plots cycle counts on an AMD Ryzen 9 9900X (a Zen 5 CPU):
 
 {
@@ -421,7 +423,7 @@ branching altogether. This allows us to implement a branch-free binary search:
 }
 
 In this version of binary search, the compiler generates a `cmov` instruction instead of a jump instruction (the branch instruction).
-As a result, this code results in no branches at all.  We see below, that this version is the fastest of all of them!
+As a result, this code results in no branches at all.  We see below, that this version is the fastest of all of them with random search keys!
 
 {
   (() => {
@@ -460,10 +462,56 @@ As a result, this code results in no branches at all.  We see below, that this v
   })()
 }
 
+
+But if we have removed branches, does this workload still benefit from a predictable access pattern?  We see below, that it does not.  The branchless binary search
+performs the exact same regardless of the access pattern (it's a little hard to tell because the lines are on top of each other).  In this case, a predictable access pattern on binary search with branches is still faster than the branch-free version.
+
+{
+  (() => {
+    let width = 900;
+    let height = 550;
+    return (
+      <>
+      <LinePlot height={height} width={width} yaxis={'cycles'}
+        file={'/code/binary-search/results/amdzen5/cycles.csv'}
+        yaxis_pretty_string={'Cycles'}
+        caption={'Binary Search performance on an AMD Zen 5 CPU'}
+        series={[
+          {
+            name: 'Binary Search Predictable',
+            className: 'BinarySearchPredictableTarget',
+            algorithm: 'BinarySearchPredictableTarget',
+          },
+          {
+            name: 'Branchless Random Binary Search',
+            className: 'BranchlessBinarySearchRandomTarget',
+            algorithm: 'BranchlessBinarySearchRandomTarget',
+          },
+          {
+            name: 'Branchless Predictable Binary Search',
+            className: 'BranchlessBinarySearchPredictableTarget',
+            algorithm: 'BranchlessBinarySearchPredictableTarget',
+          }
+        ]}/>
+      </>
+    )
+  })()
+}
+
+But why then is the branch-free version slower than predictable binary search with branches?  That is because the branch-free version has a data dependency
+from each loop iteration to the next. A given loop iteration of the branch-free version, cannot continue until the previous computations of
+base and length are fully available.
+
+This is in contrast with the version with branches. That version has a control dependency, which if guessed correctly, does not stall the CPU at all.
+For that reason, a binary search with branches with a predictable workload outperforms a branch-free version.
+
 ## Conclusion
 
-So the picture we have is complicated.  A branch-free binary search implementation will likely always outperform
-a linear search.  But if your binary search has branches (the way `std::lower_bound` does) then
-linear search may be faster than binary search for small arrays with a random access pattern on some CPUs.
-The takeaway is that you need to measure it!
+The picture we have is complicated.  We've reached a few conclusions:
+- For small arrays, linear search can be faster than a branch-y binary search.
+- A branch-free binary search will always outperform a linear search.
+- A branch-y binary search with a predictable access pattern may outperform a branch-free binary search.
+- These findings vary depending on the CPU model.
+
+So the takeaway is to benchmark the workload you're interested in on the CPUs you care about!
 

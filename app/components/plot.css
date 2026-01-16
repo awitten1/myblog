@@ -1,6 +1,7 @@
 :root {
   --binary-search-stroke: #e29a93;
   --branchless-binary-search-stroke: #e3b063;
+  --branchless-predictable-binary-search-stroke: rgb(233, 10, 44);
   --linear-search-stroke: #6b7280;
   --binary-search-predictable-stroke: #5aa985;
   --std-lower-bound-stroke: #8aa9e8;
@@ -12,6 +13,7 @@
   --linear-search-stroke: #b8c1cd;
   --binary-search-predictable-stroke: #7fc9a9;
   --std-lower-bound-stroke: #9db7f0;
+  --branchless--predictable-binary-search-stroke: rgb(233, 10, 44);
 }
 
 .legend-swatch.BinarySearchRandomTarget {
@@ -30,6 +32,15 @@
   background-color: var(--binary-search-predictable-stroke);
 }
 
+.legend-swatch.BranchlessBinarySearchPredictableTarget {
+  background-color: var(--branchless-predictable-binary-search-stroke);
+}
+
+.BranchlessBinarySearchPredictableTarget {
+  stroke: var(--branchless-predictable-binary-search-stroke);
+  stroke-width: 1;
+}
+
 .legend-swatch.StdLowerBound {
   background-color: var(--std-lower-bound-stroke);
 }
@@ -38,7 +49,11 @@
   stroke: var(--binary-search-stroke);
 }
 
-path.BinarySearchRandomTarget {
+.BinarySearchPredictableTarget {
+  stroke: var(--branchless-binary-search-stroke);
+}
+
+path {
   fill: none;
 }
 
@@ -46,32 +61,16 @@ path.BinarySearchRandomTarget {
   stroke: var(--branchless-binary-search-stroke);
 }
 
-path.BranchlessBinarySearchRandomTarget {
-  fill: none;
-}
-
 .LinearSearch {
   stroke: var(--linear-search-stroke);
-}
-
-path.LinearSearch {
-  fill: none;
 }
 
 .BinarySearchPredictableTarget {
   stroke: var(--binary-search-predictable-stroke);
 }
 
-path.BinarySearchPredictableTarget {
-  fill: none;
-}
-
 .StdLowerBound {
   stroke: var(--std-lower-bound-stroke);
-}
-
-path.StdLowerBound {
-  fill: none;
 }
 
 circle {
