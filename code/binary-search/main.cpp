@@ -35,6 +35,19 @@ static void BM_BinarySearch(benchmark::State& state) {
     state.SetComplexityN(N);
 }
 
+static void BM_BranchlessBinarySearch(benchmark::State& state) {
+    size_t N = state.range(0);
+    auto nums = get_nums(N);
+    std::sort(nums.begin(), nums.end());
+
+    uint64_t i = 0;
+    for (auto _ : state) {
+        long target = targets[i++ & (target_vec_size - 1)];
+        benchmark::DoNotOptimize(branchless_binary_search(nums, target));
+    }
+    state.SetComplexityN(N);
+}
+
 static void BM_StdLowerBound(benchmark::State& state) {
     size_t N = state.range(0);
     auto nums = get_nums(N);
@@ -51,6 +64,10 @@ static void BM_StdLowerBound(benchmark::State& state) {
 
 static void BM_BinarySearchRandomTarget(benchmark::State& state) {
     BM_BinarySearch(state);
+}
+
+static void BM_BranchlessBinarySearchRandomTarget(benchmark::State& state) {
+    BM_BranchlessBinarySearch(state);
 }
 
 static void BM_BinarySearchPredictableTarget(benchmark::State& state) {
@@ -88,6 +105,12 @@ BENCHMARK(BM_LinearSearch)->DenseRange(8,end_dense_first,1<<5)
     ->Complexity();
 
 BENCHMARK(BM_BinarySearchRandomTarget)->DenseRange(8,end_dense_first,1<<5)
+    ->DenseRange(end_dense_first,end_dense,1<<7)
+    ->RangeMultiplier(2)->Range(end_dense, end_range)
+    ->Setup([](const benchmark::State& state) { initialize_targets(targets); })
+    ->Complexity();
+
+BENCHMARK(BM_BranchlessBinarySearchRandomTarget)->DenseRange(8,end_dense_first,1<<5)
     ->DenseRange(end_dense_first,end_dense,1<<7)
     ->RangeMultiplier(2)->Range(end_dense, end_range)
     ->Setup([](const benchmark::State& state) { initialize_targets(targets); })

@@ -46,3 +46,20 @@ size_t linear_search(const std::vector<long>& vec, long target) {
     return idx;
 }
 
+size_t branchless_binary_search(const std::vector<long>& vec, long target) {
+    if (vec.empty()) {
+        return 0;
+    }
+
+    const long* base = vec.data();
+    size_t length = vec.size();
+
+    // low = base, high = base + size
+    while(length > 1) {
+        // half = (low+mid)/2
+        size_t half = length >> 1;
+        base = base[half] >= target ? base : base + half;
+        length -= half;
+    }
+    return (base - vec.data()) + (*base < target);
+}
