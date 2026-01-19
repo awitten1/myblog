@@ -56,8 +56,7 @@ static void BM_StdLowerBound(benchmark::State& state) {
     uint64_t i = 0;
     for (auto _ : state) {
         long target = targets[i++ & (target_vec_size - 1)];
-        auto it = std::lower_bound(nums.begin(), nums.end(), target);
-        benchmark::DoNotOptimize(it);
+        benchmark::DoNotOptimize(std::lower_bound(nums.begin(), nums.end(), target));
     }
     state.SetComplexityN(N);
 }
