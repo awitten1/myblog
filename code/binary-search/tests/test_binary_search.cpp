@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <random>
 #include <vector>
 
 #include "functions.hpp"
@@ -62,4 +63,19 @@ TEST(BinarySearch, AllEqualValues) {
     ExpectMatchesLowerBound(data, 4);
     ExpectMatchesLowerBound(data, 5);
     ExpectMatchesLowerBound(data, 6);
+}
+
+TEST(BinarySearch, RandomizedData) {
+    std::mt19937 gen(12345);
+    std::uniform_int_distribution<long> dist(-1000, 1000);
+
+    std::vector<long> data(512);
+    for (auto& value : data) {
+        value = dist(gen);
+    }
+    std::sort(data.begin(), data.end());
+
+    for (int i = 0; i < 50; ++i) {
+        ExpectMatchesLowerBound(data, dist(gen));
+    }
 }

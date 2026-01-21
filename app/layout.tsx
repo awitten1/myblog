@@ -17,10 +17,10 @@ export const metadata: Metadata = {
   },
   description: 'This is my portfolio.',
   openGraph: {
-    title: 'My Portfolio',
+    title: 'Andrew Witten\'s Blog',
     description: 'This is my portfolio.',
     url: baseUrl,
-    siteName: 'My Portfolio',
+    siteName: 'Andrew Witten\'s Blog',
     locale: 'en_US',
     type: 'website',
   },
