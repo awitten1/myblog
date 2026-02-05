@@ -34,7 +34,8 @@ we will also compare these implementations with `std::lower_bound`.
       size_t low = 0, high = vec.size();
 
       while (low < high) {
-          // Interestingly (low+high)/2 is measurably faster \
+          // Interestingly (low+high)/2 is measurably faster
+
           // for small arrays than low + (high - low)/2
           size_t mid = (low+high)/2;
           if (vec[mid] < target) {
