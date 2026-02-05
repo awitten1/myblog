@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { DRAFT_SLUGS } from 'app/blog/drafts'
 
 type Metadata = {
   title: string
@@ -57,6 +58,7 @@ function getMDXData(dir) {
 
 export function getBlogPosts() {
   return getMDXData(path.join(process.cwd(), 'app', 'blog', 'posts'))
+    .filter((post) => !DRAFT_SLUGS.includes(post.slug))
 }
 
 export function formatDate(date: string, includeRelative = false) {
