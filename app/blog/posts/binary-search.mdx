@@ -508,6 +508,7 @@ For that reason, a binary search with branches with a predictable workload outpe
 This is an interesting difference between data hazards and control hazards, which enables making a tradeoff.  A data hazard does not allow for speculation.
 The CPU will always stall on data hazards.  A control hazard allows a CPU to speculate across the branch, at the risk of mispeculating.
 Therefore, if you have a transform a data dependency into a predictable branch, that is an opportunity for performance improvement.
+Likewise if you have an unpredictable branch, removing that branch is also an opportunity for performance improvement.
 
 ## Conclusion
 
