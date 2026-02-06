@@ -1,0 +1,17 @@
+:root {
+  --vega-background: var(--bg);
+  --vega-text: var(--fg);
+  --vega-line: var(--border);
+  --vega-grid: var(--border);
+  --vega-primary: var(--accent);
+  --vega-hover: #ef4444;
+}
+
+[data-theme='dark'] {
+  --vega-background: var(--bg);
+  --vega-text: var(--fg);
+  --vega-line: var(--border);
+  --vega-grid: var(--border);
+  --vega-primary: var(--accent);
+  --vega-hover: #f87171;
+}
