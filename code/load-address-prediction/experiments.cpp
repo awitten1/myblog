@@ -1,17 +1,25 @@
-#include <benchmark/benchmark.h>
-
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
+#include <cstdio>
 #include <numeric>
 #include <pthread.h>
 #include <random>
-#include <string>
 #include <vector>
+
+#include "apple_arm_events.h"
 
 namespace {
 
-constexpr std::size_t kArraySizeBytes = 1 << 20;
-constexpr int kStride = 7;
+AppleEvents g_events;
+bool g_use_kperf = false;
+
+constexpr std::size_t kArraySizeBytes = 1 << 15;
+constexpr int kStride = 32 / sizeof(int);
+constexpr int kMinIters = 10;
+constexpr int kMaxIters = 1000;
+constexpr int kIterStep = 10;
+constexpr int kReps = 100;
 
 enum class AccessPattern {
   kRandom,
@@ -23,7 +31,7 @@ enum class CoreKind {
   kPCore,
 };
 
-void init_random_array(std::vector<uint64_t>& arr) {
+void init_random_array(std::vector<int>& arr) {
   std::iota(arr.begin(), arr.end(), 0);
 
   std::random_device rd;
@@ -31,9 +39,9 @@ void init_random_array(std::vector<uint64_t>& arr) {
   std::shuffle(arr.begin(), arr.end(), gen);
 }
 
-void init_strided_array(std::vector<uint64_t>& arr, int stride) {
+void init_strided_array(std::vector<int>& arr, int stride) {
   for (std::size_t i = 0; i < arr.size(); ++i) {
-    arr[i] = (i + stride) % arr.size();
+    arr[i] = static_cast<int>(i) + stride;
   }
 }
 
@@ -64,14 +72,50 @@ qos_class_t qos_class_for_core_kind(CoreKind core_kind) {
   }
 }
 
-void run_pointer_chase(benchmark::State& state, AccessPattern pattern, CoreKind core_kind) {
+__attribute__((noinline))
+void heat_cpu(std::chrono::milliseconds duration) {
+  using clock = std::chrono::steady_clock;
+  volatile uint64_t sink = 0;
+  const auto deadline = clock::now() + duration;
+  while (clock::now() < deadline) {
+    for (int i = 0; i < 1000; ++i) {
+      sink += static_cast<uint64_t>(i) * i + sink;
+    }
+  }
+}
+
+uint64_t measure_once(volatile int* arr, int iters) {
+  volatile int dep = 0;
+  for (int i = 0; i < iters; ++i) {
+    dep = arr[dep];
+  }
+
+  dep = 0;
+  if (g_use_kperf) {
+    const auto before = g_events.get_counters();
+    for (int i = 0; i < iters; ++i) {
+      dep = arr[dep];
+    }
+    const auto after = g_events.get_counters();
+    return static_cast<uint64_t>(after.cycles - before.cycles);
+  }
+
+  const auto start = std::chrono::steady_clock::now();
+  for (int i = 0; i < iters; ++i) {
+    dep = arr[dep];
+  }
+  const auto end = std::chrono::steady_clock::now();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+}
+
+void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
   if (pthread_set_qos_class_self_np(qos_class_for_core_kind(core_kind), 0) != 0) {
-    state.SkipWithError("pthread_set_qos_class_self_np failed");
+    std::fprintf(stderr, "pthread_set_qos_class_self_np failed\n");
     return;
   }
 
-  const auto array_size = kArraySizeBytes / sizeof(uint64_t);
-  std::vector<uint64_t> arr(array_size);
+  const auto array_size = kArraySizeBytes / sizeof(int);
+  std::vector<int> arr(array_size);
 
   switch (pattern) {
     case AccessPattern::kRandom:
@@ -82,39 +126,37 @@ void run_pointer_chase(benchmark::State& state, AccessPattern pattern, CoreKind 
       break;
   }
 
-  const int iters = static_cast<int>(state.range(0));
-  for (auto _ : state) {
-    volatile uint64_t dep = 0;
-    for (int i = 0; i < iters; ++i) {
-      dep = arr[dep];
+  heat_cpu(std::chrono::milliseconds(10));
+
+  std::vector<uint64_t> samples(kReps);
+  for (int iters = kMinIters; iters <= kMaxIters; iters += kIterStep) {
+    for (int r = 0; r < kReps; ++r) {
+      samples[r] = measure_once(arr.data(), iters);
     }
+    const uint64_t min_sample = *std::min_element(samples.begin(), samples.end());
+    std::printf("%s,%s,%d,%llu,%s\n",
+                access_pattern_name(pattern),
+                core_kind_name(core_kind),
+                iters,
+                static_cast<unsigned long long>(min_sample),
+                unit);
+    std::fflush(stdout);
   }
-
-  state.SetItemsProcessed(state.iterations() * iters);
-  state.SetLabel(std::string(access_pattern_name(pattern)) + "-" + core_kind_name(core_kind));
-}
-
-void BM_PointerChaseRandomECore(benchmark::State& state) {
-  run_pointer_chase(state, AccessPattern::kRandom, CoreKind::kECore);
-}
-
-void BM_PointerChaseRandomPCore(benchmark::State& state) {
-  run_pointer_chase(state, AccessPattern::kRandom, CoreKind::kPCore);
-}
-
-void BM_PointerChaseStridedECore(benchmark::State& state) {
-  run_pointer_chase(state, AccessPattern::kStrided, CoreKind::kECore);
-}
-
-void BM_PointerChaseStridedPCore(benchmark::State& state) {
-  run_pointer_chase(state, AccessPattern::kStrided, CoreKind::kPCore);
 }
 
 }  // namespace
 
-BENCHMARK(BM_PointerChaseRandomECore)->DenseRange(100, 2000, 100);
-BENCHMARK(BM_PointerChaseRandomPCore)->DenseRange(100, 2000, 100);
-BENCHMARK(BM_PointerChaseStridedECore)->DenseRange(100, 2000, 100);
-BENCHMARK(BM_PointerChaseStridedPCore)->DenseRange(100, 2000, 100);
-
-BENCHMARK_MAIN();
+int main() {
+  g_use_kperf = g_events.setup_performance_counters();
+  const char* unit = g_use_kperf ? "cycles" : "ns";
+  std::fprintf(stderr, "timing unit: %s\n", unit);
+  std::printf("pattern,core_kind,iters,runtime,unit\n");
+  const auto run = [unit](AccessPattern p, CoreKind c) {
+    run_config(p, c, unit);
+  };
+  run(AccessPattern::kRandom, CoreKind::kECore);
+  run(AccessPattern::kRandom, CoreKind::kPCore);
+  run(AccessPattern::kStrided, CoreKind::kECore);
+  run(AccessPattern::kStrided, CoreKind::kPCore);
+  return 0;
+}
