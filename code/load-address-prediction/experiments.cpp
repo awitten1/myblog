@@ -133,12 +133,26 @@ void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
     for (int r = 0; r < kReps; ++r) {
       samples[r] = measure_once(arr.data(), iters);
     }
-    const uint64_t min_sample = *std::min_element(samples.begin(), samples.end());
-    std::printf("%s,%s,%d,%llu,%s\n",
+    const uint64_t first_s = samples.front();
+    const uint64_t last_s = samples.back();
+    std::vector<uint64_t> sorted = samples;
+    std::sort(sorted.begin(), sorted.end());
+    const uint64_t min_s = sorted.front();
+    const uint64_t p25_s = sorted[sorted.size() / 4];
+    const uint64_t median_s = sorted[sorted.size() / 2];
+    const uint64_t p75_s = sorted[(3 * sorted.size()) / 4];
+    const uint64_t max_s = sorted.back();
+    std::printf("%s,%s,%d,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%s\n",
                 access_pattern_name(pattern),
                 core_kind_name(core_kind),
                 iters,
-                static_cast<unsigned long long>(min_sample),
+                static_cast<unsigned long long>(min_s),
+                static_cast<unsigned long long>(p25_s),
+                static_cast<unsigned long long>(median_s),
+                static_cast<unsigned long long>(p75_s),
+                static_cast<unsigned long long>(max_s),
+                static_cast<unsigned long long>(first_s),
+                static_cast<unsigned long long>(last_s),
                 unit);
     std::fflush(stdout);
   }
@@ -150,7 +164,7 @@ int main() {
   g_use_kperf = g_events.setup_performance_counters();
   const char* unit = g_use_kperf ? "cycles" : "ns";
   std::fprintf(stderr, "timing unit: %s\n", unit);
-  std::printf("pattern,core_kind,iters,runtime,unit\n");
+  std::printf("pattern,core_kind,iters,min,p25,median,p75,max,first,last,unit\n");
   const auto run = [unit](AccessPattern p, CoreKind c) {
     run_config(p, c, unit);
   };
