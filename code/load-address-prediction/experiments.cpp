@@ -26,7 +26,7 @@ void init_strided_array(uint64_t* arr, int array_size, int stride) {
 }
 
 void print_error_message() {
-  fprintf(stderr, "./lap <array size bytes> <random|strided> <iters>");
+  fprintf(stderr, "./lap <array size bytes>");
   exit(EXIT_FAILURE);
 }
 
@@ -41,35 +41,33 @@ std::chrono::duration<float> run_experiment(volatile uint64_t* arr, int iters) {
     dep = arr[dep];
   }
   auto t2 = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<float> time(t2 - t1);
+  std::chrono::duration<double, std::milli> time(t2 - t1);
 
   return time;
 }
 
 
 int main(int argc, char** argv) {
-  if (argc != 4) {
+  if (argc != 2) {
     print_error_message();
   }
   int array_size_bytes = std::stoi(argv[1]);
   int array_size = array_size_bytes / sizeof(long);
-  std::string do_random(argv[2]);
-  int iters = std::stoi(argv[3]);
 
-  uint64_t* arr = new uint64_t[array_size];
 
-  if (do_random == "random") {
+  std::cout << "mode,iterations,time_ms" << std::endl;
+  for (int iters = 100; iters <= 2000; iters += 100) {
+    uint64_t* arr = new uint64_t[array_size];
     init_random_array(arr, array_size);
-  } else if (do_random == "strided") {
-    init_strided_array(arr, array_size, 7);
-  } else {
-    print_error_message();
+    std::chrono::duration<double, std::milli> time = run_experiment(arr, iters);
+    std::cout << "random," << iters << "," << time.count() << std::endl;
+
+    init_strided_array(arr, array_size,7);
+    time = run_experiment(arr, iters);
+    std::cout << "strided," << iters << "," << time.count() << std::endl;
+    delete[] arr;
   }
 
-  std::chrono::duration<float> time = run_experiment(arr, iters);
-  std::cout << "took " << time.count() << " seconds" << std::endl;
-
-  delete[] arr;
 
   return 0;
 }
