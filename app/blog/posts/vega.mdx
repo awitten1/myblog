@@ -4,7 +4,8 @@ publishedAt: '2026-02-05'
 summary: 'Tinkering With Vega.'
 ---
 
-For a while I've been interested in learning about Vega.
+For a while I've been interested in learning about Vega.  Vega is described on its webpage as a [declarative language](https://vega.github.io/vega/) for
+creating visualiztions.  Here's an example of a bar chart from the starter tutorial on the webpage:
 
 {
   (() => {
@@ -17,8 +18,8 @@ For a while I've been interested in learning about Vega.
       {
         name: "table",
         values: [
-          { category: "A", amount: 28 },
-          { category: "B", amount: 55 },
+          { category: "B", amount: 28 },
+          { category: "A", amount: 55 },
           { category: "C", amount: 43 },
           { category: "D", amount: 91 },
           { category: "E", amount: 81 },
@@ -65,7 +66,7 @@ For a while I've been interested in learning about Vega.
         encode: {
           enter: {
             x: { scale: "xscale", field: "category" },
-            width: { scale: "xscale", band: 1 },
+            width: { scale: "xscale", band: 0.85 },
             y: { scale: "yscale", field: "amount" },
             y2: { scale: "yscale", value: 0 }
           },
@@ -100,5 +101,237 @@ For a while I've been interested in learning about Vega.
   }
 
   return <VegaChart spec={vegaSpec} />
+  })()
+}
+
+You describe this bar chart in JSON and it gets rendered in SVG or HTML Canvas.  The Vega Runtime then
+["parses specifications in a JSON format to produce interactive web-based graphics."](https://observablehq.com/@vega/how-vega-works)
+
+The way this works is you specify the following as attributes in the JSON:
+- The data, which is an array of objects category (the letter) and amount (the height of the bar) objects.
+- The scale of the axes.  The y-axis here is a linear scale,
+but we could have specified a log scale, or another kind of scale.
+The x-axis is a band scale, which means that it maps discrete values (the letters) to a (continuous) value
+on the x-axis.
+- The axes of the chart.  Here we have oriented the axes on the bottom and left of the chart and the scale associated with them.
+- The marks of the chart.  The marks are what actually encode visually the data of the chart.  Here we are using [rect](https://vega.github.io/vega/docs/marks/rect/)
+mark to display the rectangles of the bar chart.
+
+
+{
+  (() => {
+    const vegaSpecString = `{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "width": 900,
+  "height": 560,
+  "padding": {"top": 25, "left": 0, "right": 0, "bottom": 0},
+  "autosize": "none",
+
+  "signals": [
+      {
+        "name": "hover",
+        "value": null,
+        "on": [
+          {"events": "@cell:mouseover", "update": "datum"},
+          {"events": "@cell:mouseout", "update": "null"}
+        ]
+      },
+      {
+        "name": "title",
+        "value": "U.S. Airports, 2008",
+        "update": "hover ? hover.name + ' (' + hover.iata + ')' : 'U.S. Airports, 2008'"
+      },
+      {
+        "name": "cell_stroke",
+        "value": null,
+        "on": [
+          {"events": "dblclick", "update": "cell_stroke ? null : 'brown'"},
+          {"events": "mousedown!", "update": "cell_stroke"}
+        ]
+      }
+    ],
+
+    "data": [
+      {
+        "name": "states",
+        "url": "https://vega.github.io/vega/data/us-10m.json",
+        "format": {"type": "topojson", "feature": "states"},
+        "transform": [
+          {
+            "type": "geopath",
+            "projection": "projection"
+          }
+        ]
+      },
+      {
+        "name": "traffic",
+        "url": "https://vega.github.io/vega/data/flights-airport.csv",
+        "format": {"type": "csv", "parse": "auto"},
+        "transform": [
+          {
+            "type": "aggregate",
+            "groupby": ["origin"],
+            "fields": ["count"], "ops": ["sum"], "as": ["flights"]
+          }
+        ]
+      },
+      {
+        "name": "airports",
+        "url": "https://vega.github.io/vega/data/airports.csv",
+        "format": {"type": "csv", "parse": "auto"},
+        "transform": [
+          {
+            "type": "lookup",
+            "from": "traffic", "key": "origin",
+            "fields": ["iata"], "as": ["traffic"]
+          },
+          {
+            "type": "filter",
+            "expr": "datum.traffic != null"
+          },
+          {
+            "type": "geopoint",
+            "projection": "projection",
+            "fields": ["longitude", "latitude"]
+          },
+          {
+            "type": "filter",
+            "expr": "datum.x != null && datum.y != null"
+          },
+          {
+            "type": "voronoi", "x": "x", "y": "y"
+          },
+          {
+            "type": "collect", "sort": {
+              "field": "traffic.flights",
+              "order": "descending"
+            }
+          }
+        ]
+      },
+      {
+        "name": "routes",
+        "url": "https://vega.github.io/vega/data/flights-airport.csv",
+        "format": {"type": "csv", "parse": "auto"},
+        "transform": [
+          {
+            "type": "filter",
+            "expr": "hover && hover.iata == datum.origin"
+          },
+          {
+            "type": "lookup",
+            "from": "airports", "key": "iata",
+            "fields": ["origin", "destination"], "as": ["source", "target"]
+          },
+          {
+            "type": "filter",
+            "expr": "datum.source && datum.target"
+          },
+          {
+            "type": "linkpath",
+            "shape": "line"
+          }
+        ]
+      }
+    ],
+
+    "projections": [
+      {
+        "name": "projection",
+        "type": "albersUsa",
+        "scale": 1200,
+        "translate": [{"signal": "width / 2"}, {"signal": "height / 2"}]
+      }
+    ],
+
+    "scales": [
+      {
+        "name": "size",
+        "type": "linear",
+        "domain": {"data": "traffic", "field": "flights"},
+        "range": [16, 1000]
+      }
+    ],
+
+    "marks": [
+      {
+        "type": "path",
+        "from": {"data": "states"},
+        "encode": {
+          "enter": {
+            "fill": {"value": "#dedede"},
+            "stroke": {"value": "white"}
+          },
+          "update": {
+            "path": {"field": "path"}
+          }
+        }
+      },
+      {
+        "type": "symbol",
+        "from": {"data": "airports"},
+        "encode": {
+          "enter": {
+            "size": {"scale": "size", "field": "traffic.flights"},
+            "fill": {"value": "steelblue"},
+            "fillOpacity": {"value": 0.8},
+            "stroke": {"value": "white"},
+            "strokeWidth": {"value": 1.5}
+          },
+          "update": {
+            "x": {"field": "x"},
+            "y": {"field": "y"}
+          }
+        }
+      },
+      {
+        "type": "path",
+        "name": "cell",
+        "from": {"data": "airports"},
+        "encode": {
+          "enter": {
+            "fill": {"value": "transparent"},
+            "strokeWidth": {"value": 0.35}
+          },
+          "update": {
+            "path": {"field": "path"},
+            "stroke": {"signal": "cell_stroke"}
+          }
+        }
+      },
+      {
+        "type": "path",
+        "interactive": false,
+        "from": {"data": "routes"},
+        "encode": {
+          "enter": {
+            "path": {"field": "path"},
+            "stroke": {"value": "black"},
+            "strokeOpacity": {"value": 0.35}
+          }
+        }
+      },
+      {
+        "type": "text",
+        "interactive": false,
+        "encode": {
+          "enter": {
+            "x": {"signal": "width", "offset": -5},
+            "y": {"value": 0},
+            "fill": {"value": "black"},
+            "fontSize": {"value": 20},
+            "align": {"value": "right"}
+          },
+          "update": {
+            "text": {"signal": "title"}
+          }
+        }
+      }
+    ]
+  }
+  `
+  const vegaSpec = JSON.parse(vegaSpecString)
+
+    return <VegaChart spec={vegaSpec} />
   })()
 }

@@ -70,7 +70,7 @@ function applyThemeToSpec(spec: vega.Spec, theme: ThemeColors): vega.Spec {
       ...themedSpec.config?.title,
     },
     text: {
-      color: theme.text,
+      fill: theme.text,
       ...themedSpec.config?.text,
     },
     range: {
@@ -78,7 +78,7 @@ function applyThemeToSpec(spec: vega.Spec, theme: ThemeColors): vega.Spec {
       ...themedSpec.config?.range,
     },
     mark: {
-      color: theme.primary,
+      fill: theme.primary,
       ...themedSpec.config?.mark,
     },
   }
@@ -141,6 +141,8 @@ export function VegaChart({
 
     const theme = readThemeColors()
     const themedSpec = applyThemeToSpec(spec, theme)
+    // console.log(spec)
+    console.log(themedSpec)
     const view = new vega.View(vega.parse(themedSpec), {
       renderer,
       container: containerRef.current,

@@ -67,9 +67,7 @@ export default function RootLayout({
             __html: `(function() {
               try {
                 var theme = localStorage.getItem('theme');
-                var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
-                if (!theme && supportDarkMode) theme = 'dark';
-                if (!theme) theme = 'light';
+                if (!theme) theme = 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
               } catch (e) {}
             })()`,
