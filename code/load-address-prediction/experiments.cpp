@@ -24,6 +24,7 @@ constexpr int kReps = 100;
 enum class AccessPattern {
   kRandom,
   kStrided,
+  kSaRv,
 };
 
 enum class CoreKind {
@@ -31,17 +32,29 @@ enum class CoreKind {
   kPCore,
 };
 
-void init_random_array(std::vector<int>& arr) {
-  std::iota(arr.begin(), arr.end(), 0);
+__attribute__((noinline))
+void init_random_array(int* arr, int array_size) {
+  std::iota(arr, arr + array_size, 0);
 
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::shuffle(arr.begin(), arr.end(), gen);
+  std::shuffle(arr, arr + array_size, gen);
 }
 
-void init_strided_array(std::vector<int>& arr, int stride) {
-  for (std::size_t i = 0; i < arr.size(); ++i) {
-    arr[i] = static_cast<int>(i) + stride;
+__attribute__((noinline))
+void init_strided_array(int* arr, int array_sz) {
+  for (std::size_t i = 0; i < array_sz; i+=kStride) {
+    arr[i] = i + kStride;
+  }
+}
+
+__attribute__((noinline))
+void init_sa_rv_array(int* arr, int array_size) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<int> dist(1, 128);
+  for (std::size_t i = 0; i < array_size; ++i) {
+    arr[i] = dist(gen) * kStride;
   }
 }
 
@@ -51,6 +64,8 @@ const char* access_pattern_name(AccessPattern pattern) {
       return "random";
     case AccessPattern::kStrided:
       return "strided";
+    case AccessPattern::kSaRv:
+      return "sa_rv";
   }
 }
 
@@ -72,6 +87,14 @@ qos_class_t qos_class_for_core_kind(CoreKind core_kind) {
   }
 }
 
+uint64_t get_time() {
+  if (g_use_kperf) {
+    return g_events.get_counters().cycles;
+  }
+  return std::chrono::duration_cast<std::chrono::nanoseconds>
+    (std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
 __attribute__((noinline))
 void heat_cpu(std::chrono::milliseconds duration) {
   using clock = std::chrono::steady_clock;
@@ -84,28 +107,38 @@ void heat_cpu(std::chrono::milliseconds duration) {
   }
 }
 
-uint64_t measure_once(volatile int* arr, int iters) {
+__attribute__((noinline))
+uint64_t measure_chase(volatile int* arr, int iters) {
   volatile int dep = 0;
   for (int i = 0; i < iters; ++i) {
     dep = arr[dep];
   }
 
   dep = 0;
-  if (g_use_kperf) {
-    const auto before = g_events.get_counters();
-    for (int i = 0; i < iters; ++i) {
-      dep = arr[dep];
-    }
-    const auto after = g_events.get_counters();
-    return static_cast<uint64_t>(after.cycles - before.cycles);
-  }
-
-  const auto start = std::chrono::steady_clock::now();
+  auto start = get_time();
   for (int i = 0; i < iters; ++i) {
     dep = arr[dep];
   }
-  const auto end = std::chrono::steady_clock::now();
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+  auto end = get_time();
+  return end - start;
+}
+
+__attribute__((noinline))
+uint64_t measure_sa_rv(volatile int* arr, int iters) {
+  volatile int dep = 0;
+  for (int i = 0; i < iters; ++i) {
+    const int v = arr[dep];
+    dep += v < kStride ? v : kStride;
+  }
+
+  dep = 0;
+  auto start = get_time();
+  for (int i = 0; i < iters; ++i) {
+    const int v = arr[dep];
+    dep += v < kStride ? v : kStride;
+  }
+  auto end = get_time();
+  return end - start;
 }
 
 void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
@@ -115,14 +148,17 @@ void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
   }
 
   const auto array_size = kArraySizeBytes / sizeof(int);
-  std::vector<int> arr(array_size);
+  int* arr = new int[array_size];
 
   switch (pattern) {
     case AccessPattern::kRandom:
-      init_random_array(arr);
+      init_random_array(arr, array_size);
       break;
     case AccessPattern::kStrided:
-      init_strided_array(arr, kStride);
+      init_strided_array(arr, array_size);
+      break;
+    case AccessPattern::kSaRv:
+      init_sa_rv_array(arr, array_size);
       break;
   }
 
@@ -131,7 +167,11 @@ void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
   std::vector<uint64_t> samples(kReps);
   for (int iters = kMinIters; iters <= kMaxIters; iters += kIterStep) {
     for (int r = 0; r < kReps; ++r) {
-      samples[r] = measure_once(arr.data(), iters);
+      if (pattern == AccessPattern::kSaRv) {
+        samples[r] = measure_sa_rv(arr, iters);
+      } else {
+        samples[r] = measure_chase(arr, iters);
+      }
     }
     const uint64_t first_s = samples.front();
     const uint64_t last_s = samples.back();
@@ -172,5 +212,7 @@ int main() {
   run(AccessPattern::kRandom, CoreKind::kPCore);
   run(AccessPattern::kStrided, CoreKind::kECore);
   run(AccessPattern::kStrided, CoreKind::kPCore);
+  run(AccessPattern::kSaRv, CoreKind::kECore);
+  run(AccessPattern::kSaRv, CoreKind::kPCore);
   return 0;
 }
