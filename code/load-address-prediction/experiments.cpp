@@ -91,9 +91,9 @@ static void run(enum AccessPattern pattern, const char* unit,
   }
 
   uint64_t* samples = new uint64_t[kReps];
-  const int cpu = current_cpu();
 
   for (int iters = kMinIters; iters <= kMaxIters; iters += kIterStep) {
+    int cpu = current_cpu();
     for (int r = 0; r < kReps; ++r) {
       if (pattern == PATTERN_SA_RV) {
         samples[r] = measure_sa_rv(arr, iters);
