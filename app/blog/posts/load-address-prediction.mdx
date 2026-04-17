@@ -14,7 +14,7 @@ down into series of smaller steps.  Many different instructions can be in the pi
 time at different stages.  In this way CPUs overlap execution of many instructions at a time. Modern CPU pipelines have many stages including instruction
 fetch, instruction decode, register allocation and renaming, uop dispatch, execution, and retirement.
 
-Pipelining does introduces some problems.  The first problem are branch instructions in the code.
+Pipelining introduces some problems.  The first problem is branch instructions in the code.
 Conditional branch instructions cause the program to go one of two ways (either the if statement is taken or it won't be taken).
 Depending on the code, it might take hundreds of cycles to know which direction the branch will take (the branch may depend on
 a load from memory that misses the CPU cache).  During this time, the CPU doesn't know which
@@ -40,8 +40,8 @@ Another challenge that CPU pipelining causes comes from data dependencies in cod
   )
 })()
 }
-The second `mov` instruction depends on the first `mov` instruction.  The second `mov` instruction cannot initiate its load until
-`rax` is made available from the preceding `mov` instruction.  This is called a Read After Write (RAW) dependency.
+The second `mov` instruction depends on the first `mov` instruction.  The second `mov` instruction cannot issue until
+`rax` is produced by the preceding `mov` instruction.  This is called a Read After Write (RAW) dependency.
 RAW dependencies are also called "true dependencies" because there is actually data flowing from the write to the read.
 This kind of dependency typically causes the read instruction to stall until the write completes (the first `mov` in this case).
 This limits the throughput of the CPU.
@@ -137,7 +137,7 @@ This is already suggestive, but it does not yet distinguish *address* prediction
 prediction. The value loaded at each step is also constant, so either mechanism
 would explain the speedup.
 
-In order to distinguish the two we design a different experiment.  In this experiment, we populate
+To distinguish the two, we design a different experiment.  In this experiment, we populate
 the array with random values in the range `[stride,array_size)`.  We then execute the following code:
 
 {
@@ -168,7 +168,7 @@ the array with random values in the range `[stride,array_size)`.  We then execut
 }
 
 In this code we again do a dry run first to make sure the array is in the L1 cache.
-This experiment generates the exact same load stream as the strided experiment because
+This experiment generates the exact same address stream as the strided experiment because
 `stride` is less than all values in the array. And still, in this experiment,
 we see a significant speedup over the random case!
 
@@ -187,8 +187,8 @@ we see a significant speedup over the random case!
 On the P-core, `sa_rv` is much faster than `random` even though the values loaded at each step
 are random.  The only thing `sa_rv` and `strided` have in common is the sequence of
 addresses visited.  Therefore, that is what the predictor is latching onto.
-On the E-core the two patterns still pretty much the same, consistent with there being no address
-predictor on the E-core at all.
+On the E-core the two patterns still look pretty much the same, consistent with there being no
+address predictor on the E-core at all.
 
 ## References
 
