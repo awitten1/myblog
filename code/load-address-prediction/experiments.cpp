@@ -129,9 +129,12 @@ int main(void) {
     fprintf(stderr, "failed to set qos class\n");
     exit(EXIT_FAILURE);
   }
-  run(PATTERN_STRIDED, unit, "ecore", true);
-  run(PATTERN_RANDOM,  unit, "ecore", true);
+  run(PATTERN_SA_RV,   unit, "ecore", false);
   run(PATTERN_SA_RV,   unit, "ecore", true);
+  run(PATTERN_STRIDED, unit, "ecore", false);
+  run(PATTERN_STRIDED, unit, "ecore", true);
+  run(PATTERN_RANDOM,  unit, "ecore", false);
+  run(PATTERN_RANDOM,  unit, "ecore", true);
 
   if (pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0) != 0) {
     fprintf(stderr, "failed to set qos class\n");
