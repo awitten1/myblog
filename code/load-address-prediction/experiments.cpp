@@ -19,17 +19,12 @@ constexpr int kStride = 32 / sizeof(int);
 constexpr int kMinIters = 10;
 constexpr int kMaxIters = 1000;
 constexpr int kIterStep = 10;
-constexpr int kReps = 100;
+constexpr int kReps = 1000;
 
 enum class AccessPattern {
   kRandom,
   kStrided,
   kSaRv,
-};
-
-enum class CoreKind {
-  kECore,
-  kPCore,
 };
 
 __attribute__((noinline))
@@ -69,42 +64,12 @@ const char* access_pattern_name(AccessPattern pattern) {
   }
 }
 
-const char* core_kind_name(CoreKind core_kind) {
-  switch (core_kind) {
-    case CoreKind::kECore:
-      return "ecore";
-    case CoreKind::kPCore:
-      return "pcore";
-  }
-}
-
-qos_class_t qos_class_for_core_kind(CoreKind core_kind) {
-  switch (core_kind) {
-    case CoreKind::kECore:
-      return QOS_CLASS_BACKGROUND;
-    case CoreKind::kPCore:
-      return QOS_CLASS_USER_INTERACTIVE;
-  }
-}
-
 uint64_t get_time() {
   if (g_use_kperf) {
     return g_events.get_counters().cycles;
   }
   return std::chrono::duration_cast<std::chrono::nanoseconds>
     (std::chrono::steady_clock::now().time_since_epoch()).count();
-}
-
-__attribute__((noinline))
-void heat_cpu(std::chrono::milliseconds duration) {
-  using clock = std::chrono::steady_clock;
-  volatile uint64_t sink = 0;
-  const auto deadline = clock::now() + duration;
-  while (clock::now() < deadline) {
-    for (int i = 0; i < 1000; ++i) {
-      sink += static_cast<uint64_t>(i) * i + sink;
-    }
-  }
 }
 
 __attribute__((noinline))
@@ -141,12 +106,7 @@ uint64_t measure_sa_rv(volatile int* arr, int iters) {
   return end - start;
 }
 
-void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
-  if (pthread_set_qos_class_self_np(qos_class_for_core_kind(core_kind), 0) != 0) {
-    std::fprintf(stderr, "pthread_set_qos_class_self_np failed\n");
-    return;
-  }
-
+void run(AccessPattern pattern, const char* unit, const char* core_kind) {
   const auto array_size = kArraySizeBytes / sizeof(int);
   int* arr = new int[array_size];
 
@@ -162,8 +122,6 @@ void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
       break;
   }
 
-  heat_cpu(std::chrono::milliseconds(10));
-
   std::vector<uint64_t> samples(kReps);
   for (int iters = kMinIters; iters <= kMaxIters; iters += kIterStep) {
     for (int r = 0; r < kReps; ++r) {
@@ -177,22 +135,12 @@ void run_config(AccessPattern pattern, CoreKind core_kind, const char* unit) {
     const uint64_t last_s = samples.back();
     std::vector<uint64_t> sorted = samples;
     std::sort(sorted.begin(), sorted.end());
-    const uint64_t min_s = sorted.front();
-    const uint64_t p25_s = sorted[sorted.size() / 4];
     const uint64_t median_s = sorted[sorted.size() / 2];
-    const uint64_t p75_s = sorted[(3 * sorted.size()) / 4];
-    const uint64_t max_s = sorted.back();
-    std::printf("%s,%s,%d,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%s\n",
+    std::printf("%s,%s,%d,%llu,%s\n",
                 access_pattern_name(pattern),
-                core_kind_name(core_kind),
+                core_kind,
                 iters,
-                static_cast<unsigned long long>(min_s),
-                static_cast<unsigned long long>(p25_s),
                 static_cast<unsigned long long>(median_s),
-                static_cast<unsigned long long>(p75_s),
-                static_cast<unsigned long long>(max_s),
-                static_cast<unsigned long long>(first_s),
-                static_cast<unsigned long long>(last_s),
                 unit);
     std::fflush(stdout);
   }
@@ -204,15 +152,16 @@ int main() {
   g_use_kperf = g_events.setup_performance_counters();
   const char* unit = g_use_kperf ? "cycles" : "ns";
   std::fprintf(stderr, "timing unit: %s\n", unit);
-  std::printf("pattern,core_kind,iters,min,p25,median,p75,max,first,last,unit\n");
-  const auto run = [unit](AccessPattern p, CoreKind c) {
-    run_config(p, c, unit);
-  };
-  run(AccessPattern::kRandom, CoreKind::kECore);
-  run(AccessPattern::kRandom, CoreKind::kPCore);
-  run(AccessPattern::kStrided, CoreKind::kECore);
-  run(AccessPattern::kStrided, CoreKind::kPCore);
-  run(AccessPattern::kSaRv, CoreKind::kECore);
-  run(AccessPattern::kSaRv, CoreKind::kPCore);
+  std::printf("pattern,core_kind,iters,median,unit\n");
+
+  pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+  run(AccessPattern::kStrided, unit, "ecore");
+  run(AccessPattern::kRandom, unit, "ecore");
+  run(AccessPattern::kSaRv, unit, "ecore");
+
+  pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+  run(AccessPattern::kStrided, unit, "pcore");
+  run(AccessPattern::kRandom, unit, "pcore");
+  run(AccessPattern::kSaRv, unit, "pcore");
   return 0;
 }
