@@ -201,7 +201,7 @@ address predictor on the E-core at all.
 
 In conclusion, we have observed that when reading from a predictable stream of addresses,
 Apple M2 processors on P-cores are able to execute dependent loads faster than would be
-expected from simple serialization.  This suggests that these processors are performing
+expected if loads were serialized.  This suggests that these processors are performing
 load address prediction.  E-cores don't seem to be doing this same prediction.
 
 ## References
