@@ -1,5 +1,5 @@
 ---
-title: 'Load Address Prediction on Mac M2 Processors'
+title: 'Load Address Prediction on Apple M2 Processors'
 publishedAt: '2026-04-18'
 summary: 'Discussing LAP'
 ---
@@ -50,7 +50,7 @@ This limits the throughput of the CPU.
 
 ## Load Address Prediction
 
-A recent Apple patent [1] suggests a new technique for overcoming these dependencies.  The patent writes
+A recent Apple patent [\[1\]](#ref-1) suggests a new technique for overcoming these dependencies.  The patent writes
 "architectural registers repeatedly used
 as a destination register and subsequently as a source
 register cause serialization of instruction execution for associated source code segments."
@@ -102,12 +102,9 @@ On M2 processors, we actually observe something different.  The runtime of this 
 the contents of the array `arr` and on which CPU core the program runs on.  I filled the array in
 two different ways:
 
-- **strided** — every element stores the constant stride `s`, so `dep` walks the array as
-  `0, s, 2s, 3s, …`.  The sequence of addresses the CPU visits is trivially predictable.
-- **random** — `arr` is a random permutation of `0..N-1`, so the address loaded on iteration
-  `i+1` is statistically independent of iteration `i`.  The sequence is deterministic across
-  repeated runs of the loop (the array is fixed), but it is not derivable from the instruction
-  stream.
+- **strided** — each element points `s` positions ahead, e.g. `arr[i] = i + s`, so
+  `dep` walks the array as `0, s, 2s, 3s, …`
+- **random** — `arr` is a random permutation of `0..N-1`
 
 Both arrays fit in L1 and are warmed before measurement, so every load is an L1 hit.  The only
 thing that changes between the two runs is the pattern of addresses visited.  If the CPU is doing
@@ -136,8 +133,8 @@ execution.  The E-core, by contrast, appears to have no such predictor: its runt
 governed by load-use latency regardless of how addressable the pattern is.
 
 This is already suggestive, but it does not yet distinguish *address* prediction from *value*
-prediction. The value loaded at each step is also constant, so either mechanism
-would explain the speedup.
+prediction. In the strided case the loaded values are highly regular as well as the addresses, so
+either mechanism could explain the speedup.
 
 To distinguish the two, we design a different experiment.  In this experiment, we populate
 the array with random values in the range `[stride,array_size)`.  We then execute the following code:
@@ -194,6 +191,6 @@ address predictor on the E-core at all.
 
 ## References
 
-[1] Early load execution via constant address and stride prediction
+<div id="ref-1">[1] Early load execution via constant address and stride prediction</div>
 
-[2] SLAP: Data Speculation Attacks via Load Address Prediction on Apple Silicon
+<div id="ref-2">[2] SLAP: Data Speculation Attacks via Load Address Prediction on Apple Silicon</div>
