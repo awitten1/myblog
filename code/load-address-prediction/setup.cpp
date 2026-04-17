@@ -3,7 +3,7 @@
 extern const int kStride = 32 / sizeof(int);
 
 void init_random_array(int* arr, int array_size) {
-  std::iota(arr, arr + array_size, 0);
+  for (int i = 0; i < array_size; ++i) arr[i] = i;
 
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -11,8 +11,8 @@ void init_random_array(int* arr, int array_size) {
 }
 
 void init_strided_array(int* arr, int array_sz) {
-  for (std::size_t i = 0; i < array_sz; i+=kStride) {
-    arr[i] = i + kStride;
+  for (int i = 0; i < array_sz; i += kStride) {
+    arr[i] = kStride;
   }
 }
 
