@@ -8,6 +8,14 @@ summary: 'Discussing LAP'
 
 *The code for this blog can be found [here](https://github.com/awitten1/myblog/tree/main/code/load-address-prediction).*
 
+## Contents
+
+- [Pipelining](#pipelining)
+- [Load Address Prediction](#load-address-prediction)
+- [Observing Load Address Prediction on M2 Processors](#observing-load-address-prediction-on-m2-processors)
+- [Conclusion](#conclusion)
+- [References](#references)
+
 ## Pipelining
 
 CPU [pipelining](https://en.wikipedia.org/wiki/Instruction_pipelining) is a technique that modern CPUs
@@ -188,6 +196,13 @@ are random.  The only thing `sa_rv` and `strided` have in common is the sequence
 addresses visited.  Therefore, that is what the predictor is latching onto.
 On the E-core the two patterns still look pretty much the same, consistent with there being no
 address predictor on the E-core at all.
+
+## Conclusion
+
+In conclusion, we have observed that when reading from a predictable stream of addresses,
+Apple M2 processors on P-cores are able to execute dependent loads faster than would be
+expected from simple serialization.  This suggests that these processors are performing
+load address prediction.  E-cores don't seem to be doing this same prediction.
 
 ## References
 
