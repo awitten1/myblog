@@ -5,6 +5,7 @@ import { highlight } from 'sugar-high'
 import React from 'react'
 import { Iframe } from '../iframe'
 import { LinePlot } from '../plots'
+import { LapPlot } from '../lap-plot'
 import { VegaChart } from '../client/vega'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import remarkMath from 'remark-math'
@@ -114,6 +115,7 @@ let components = {
   Table,
   Thing,
   LinePlot,
+  LapPlot,
   Iframe,
   VegaChart,
   SyntaxHighlighter: (props) => (

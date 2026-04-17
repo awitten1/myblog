@@ -20,8 +20,8 @@ void init_strided_array(int* arr, int array_sz) {
 void init_sa_rv_array(int* arr, int array_size) {
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> dist(0, 8);
+  std::uniform_int_distribution<int> dist(kStride, array_size-1);
   for (int i = 0; i < array_size; ++i) {
-    arr[i] = dist(gen) * kStride;
+    arr[i] = dist(gen);
   }
 }

@@ -88,10 +88,107 @@ Consider the following C++ code:
 }
 
 This code runs a loop of RAW dependencies.  Each iteration of the loop is a load `dep = arr[dep]` which depends
-on the write from the previous loop iteration.
+on the write from the previous loop iteration.  The first loop is to ensure that the array is in the L1 cache of the CPU core.
+We also ensure that the entire array is small enough that it can fit in the L1 cache of the CPU core.
 
+Without the CPU predicting some data value,
+you would expect each of these load from L1 instructions to execute serially, one after the other.
+Each load would wait for the previous load to produce `dep`, so the loop's runtime should scale as
+`iterations × load latency`.
 
+On M2 processors, we actually observe something different.  The runtime of this program depends on
+the contents of the array `arr` and on which CPU core the program runs on.  I filled the array in
+two different ways:
 
+- **strided** — every element stores the constant stride `s`, so `dep` walks the array as
+  `0, s, 2s, 3s, …`.  The sequence of addresses the CPU visits is trivially predictable.
+- **random** — `arr` is a random permutation of `0..N-1`, so the address loaded on iteration
+  `i+1` is statistically independent of iteration `i`.  The sequence is deterministic across
+  repeated runs of the loop (the array is fixed), but it is not derivable from the instruction
+  stream.
+
+Both arrays fit in L1 and are warmed before measurement, so every load is an L1 hit.  The only
+thing that changes between the two runs is the pattern of addresses visited.  If the CPU is doing
+nothing special, the two should perform identically.
+
+{
+  (() => {
+    return (
+      <LapPlot
+        file={'code/load-address-prediction/results.csv'}
+        caption={'Median cycles per run of the pointer-chase loop on an Apple M2, faceted by core class. Array is 32 KiB and resident in L1.'}
+      />
+    )
+  })()
+}
+
+They do not perform identically.  On the P-core, `strided` runs roughly twice as fast as
+`random`.
+On the E-core, `strided` and `random` perform almost identically.
+
+The P-core is doing something that depends on the address stream.  When the addresses form a
+predictable pattern, successive loads can issue in parallel instead of serializing on the prior
+load's result.  This is the behavior the Apple patent describes.  When the addresses are
+unpredictable, the predictor has nothing to latch onto and the loop falls back to serialized
+execution.  The E-core, by contrast, appears to have no such predictor: its runtime is
+governed by load-use latency regardless of how addressable the pattern is.
+
+This is already suggestive, but it does not yet distinguish *address* prediction from *value*
+prediction. The value loaded at each step is also constant, so either mechanism
+would explain the speedup.
+
+In order to distinguish the two we design a different experiment.  In this experiment, we populate
+the array with random values in the range `[stride,array_size)`.  We then execute the following code:
+
+{
+(() => {
+
+  const code = `
+  uint64_t time_sa_rv(volatile int* arr, int iters) {
+    volatile int dep = 0;
+    for (int i = 0; i < iters; ++i) {
+      dep += std::min(stride, arr[dep]);
+    }
+
+    dep = 0;
+    uint64_t start = get_time();
+    for (int i = 0; i < iters; ++i) {
+      dep += std::min(stride, arr[dep]);
+    }
+    uint64_t end = get_time();
+    return end - start;
+  }
+  `
+  return (
+    <SyntaxHighlighter language={"cpp"}>
+    {code}
+    </SyntaxHighlighter>
+  )
+})()
+}
+
+In this code we again do a dry run first to make sure the array is in the L1 cache.
+This experiment generates the exact same load stream as the strided experiment because
+`stride` is less than all values in the array. And still, in this experiment,
+we see a significant speedup over the random case!
+
+{
+  (() => {
+    return (
+      <LapPlot
+        file={'code/load-address-prediction/results.csv'}
+        patterns={['sa_rv', 'random']}
+        caption={'sa_rv vs. random on an Apple M2. On the P-core, sa_rv tracks the strided curve rather than random, isolating the speedup to address prediction rather than value prediction.'}
+      />
+    )
+  })()
+}
+
+On the P-core, `sa_rv` is much faster than `random` even though the values loaded at each step
+are random.  The only thing `sa_rv` and `strided` have in common is the sequence of
+addresses visited.  Therefore, that is what the predictor is latching onto.
+On the E-core the two patterns still pretty much the same, consistent with there being no address
+predictor on the E-core at all.
 
 ## References
 
