@@ -1,0 +1,100 @@
+---
+title: 'Load Address Prediction on Mac M2 Processors'
+publishedAt: '2026-04-18'
+summary: 'Discussing LAP'
+---
+
+*This blog is based on a paper from Georgia Tech called [SLAP](https://predictors.fail/files/SLAP.pdf).*
+
+## Pipelining
+
+CPU [pipelining](https://en.wikipedia.org/wiki/Instruction_pipelining) is a technique that modern CPUs
+employ to achieve instruction level parallelism.  Pipelining means that each instruction is broken
+down into series of smaller steps.  Many different instructions can be in the pipeline at the same
+time at different stages.  In this way CPUs overlap execution of many instructions at a time. Modern CPU pipelines have many stages including instruction
+fetch, instruction decode, register allocation and renaming, uop dispatch, execution, and retirement.
+
+Pipelining does introduces some problems.  The first problem are branch instructions in the code.
+Conditional branch instructions cause the program to go one of two ways (either the if statement is taken or it won't be taken).
+Depending on the code, it might take hundreds of cycles to know which direction the branch will take (the branch may depend on
+a load from memory that misses the CPU cache).  During this time, the CPU doesn't know which
+code path to feed to the pipeline.
+
+CPUs try to get around this by executing instructions speculatively.  Speculative execution means
+that the CPU will try to predict which path the branch instruction will take.
+Instructions that are speculatively executed are fetched, decoded, and executed, but are only committed (retired) when the CPU
+confirms that it predicted correctly.  If it mispredicts, the CPU flushes the pipeline and discards the work that it did.
+In this way, CPUs try to overcome branches: they guess which path will be taken and speculatively execute that path.
+
+Another challenge that CPU pipelining causes comes from data dependencies in code.  Consider the following x86 code:
+{
+(() => {
+
+  const code = `mov rax, [rdi]
+  mov rdx, [rax]
+  `
+  return (
+    <SyntaxHighlighter language={"nasm"}>
+    {code}
+    </SyntaxHighlighter>
+  )
+})()
+}
+The second `mov` instruction depends on the first `mov` instruction.  The second `mov` instruction cannot initiate its load until
+`rax` is made available from the preceding `mov` instruction.  This is called a Read After Write (RAW) dependency.
+RAW dependencies are also called "true dependencies" because there is actually data flowing from the write to the read.
+This kind of dependency typically causes the read instruction to stall until the write completes (the first `mov` in this case).
+This limits the throughput of the CPU.
+
+## Load Address Prediction
+
+A recent Apple patent [1] suggests a new technique for overcoming these dependencies.  The patent writes
+"architectural registers repeatedly used
+as a destination register and subsequently as a source
+register cause serialization of instruction execution for associated source code segments."
+This is much like the x86 code fragment above.  In that x86 code, `rax` is used as a destination register and then
+as a source register.  As a result, the second load cannot begin until the first load has completed.
+
+Apple's patent proposes a CPU with a prediction table which executes load instructions "with a retrieved predicted address from the prediction table."
+In other words, the CPU attempts to predict where load will read from and will speculate based on that prediction.
+
+## Observing Load Address Prediction on M2 Processors
+
+Consider the following C++ code:
+{
+(() => {
+
+  const code = `uint64_t time_chase(volatile int* arr, int iters) {
+  volatile int dep = 0;
+  for (int i = 0; i < iters; ++i) {
+    dep = arr[dep];
+  }
+
+  dep = 0;
+  uint64_t start = get_time();
+  for (int i = 0; i < iters; ++i) {
+    dep = arr[dep];
+  }
+  uint64_t end = get_time();
+  return end - start;
+}
+  `
+  return (
+    <SyntaxHighlighter language={"cpp"}>
+    {code}
+    </SyntaxHighlighter>
+  )
+})()
+}
+
+This code runs a loop of RAW dependencies.  Each iteration of the loop is a load `dep = arr[dep]` which depends
+on the write from the previous loop iteration.
+
+
+
+
+## References
+
+[1] Early load execution via constant address and stride prediction
+
+[2] SLAP: Data Speculation Attacks via Load Address Prediction on Apple Silicon

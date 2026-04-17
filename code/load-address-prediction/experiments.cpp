@@ -47,7 +47,7 @@ static uint64_t get_time(void) {
   return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
 }
 
-static uint64_t measure_chase(volatile int* arr, int iters) {
+static uint64_t time_chase(volatile int* arr, int iters) {
   volatile int dep = 0;
   for (int i = 0; i < iters; ++i) {
     dep = arr[dep];
@@ -62,7 +62,7 @@ static uint64_t measure_chase(volatile int* arr, int iters) {
   return end - start;
 }
 
-static uint64_t measure_sa_rv(volatile int* arr, int iters) {
+static uint64_t time_sa_rv(volatile int* arr, int iters) {
   volatile int dep = 0;
   for (int i = 0; i < iters; ++i) {
     const int v = arr[dep];
@@ -96,9 +96,9 @@ static void run(enum AccessPattern pattern, const char* unit,
     int cpu = current_cpu();
     for (int r = 0; r < kReps; ++r) {
       if (pattern == PATTERN_SA_RV) {
-        samples[r] = measure_sa_rv(arr, iters);
+        samples[r] = time_sa_rv(arr, iters);
       } else {
-        samples[r] = measure_chase(arr, iters);
+        samples[r] = time_chase(arr, iters);
       }
     }
     std::sort(samples, samples + kReps);

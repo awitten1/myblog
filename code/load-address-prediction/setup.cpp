@@ -1,6 +1,7 @@
 #include <random>
 
 extern const int kStride = 32 / sizeof(int);
+static_assert(sizeof(int) == 4);
 
 void init_random_array(int* arr, int array_size) {
   for (int i = 0; i < array_size; ++i) arr[i] = i;
