@@ -1,15 +1,12 @@
+import type { MDXComponents } from 'mdx/types'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MDXRemote } from 'next-mdx-remote/rsc'
-import { highlight } from 'sugar-high'
 import React from 'react'
-import { Iframe } from '../iframe'
-import { LinePlot } from '../plots'
-import { LapPlot } from '../lap-plot'
-import { VegaChart } from '../client/vega'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
+import { Iframe } from 'app/components/iframe'
+import { LinePlot } from 'app/components/plots'
+import { LapPlot } from 'app/components/lap-plot'
+import { VegaChart } from 'app/components/client/vega'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
@@ -64,8 +61,6 @@ function Thing() {
 }
 
 function Code({ children, ...props }) {
-//  let codeHTML = highlight(children)
-//  return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />
   return <code {...props}>{children}</code>
 }
 
@@ -73,11 +68,11 @@ function slugify(str) {
   return str
     .toString()
     .toLowerCase()
-    .trim() // Remove whitespace from both ends of a string
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/&/g, '-and-') // Replace & with 'and'
-    .replace(/[^\w\-]+/g, '') // Remove all non-word characters except for -
-    .replace(/\-\-+/g, '-') // Replace multiple - with single -
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/&/g, '-and-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
 }
 
 function createHeading(level) {
@@ -102,7 +97,7 @@ function createHeading(level) {
   return Heading
 }
 
-let components = {
+const baseComponents: MDXComponents = {
   h1: createHeading(1),
   h2: createHeading(2),
   h3: createHeading(3),
@@ -125,24 +120,16 @@ let components = {
       codeTagProps={{
         style: {
           fontFamily: 'inherit',
-        }
+        },
       }}
       {...props}
     />
   ),
 }
 
-export function CustomMDX(props) {
-  return (
-    <MDXRemote
-      {...props}
-      options={{
-        mdxOptions: {
-          remarkPlugins: [remarkMath],
-          rehypePlugins: [rehypeKatex],
-        },
-      }}
-      components={{ ...components, ...(props.components || {}) }}
-    />
-  )
+export function useMDXComponents(components: MDXComponents): MDXComponents {
+  return {
+    ...baseComponents,
+    ...components,
+  }
 }

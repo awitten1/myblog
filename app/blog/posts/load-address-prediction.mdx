@@ -65,19 +65,19 @@ Consider the following C++ code:
 (() => {
 
   const code = `uint64_t time_chase(volatile int* arr, int iters) {
-  volatile int dep = 0;
-  for (int i = 0; i < iters; ++i) {
-    dep = arr[dep];
-  }
+    volatile int dep = 0;
+    for (int i = 0; i < iters; ++i) {
+      dep = arr[dep];
+    }
 
-  dep = 0;
-  uint64_t start = get_time();
-  for (int i = 0; i < iters; ++i) {
-    dep = arr[dep];
+    dep = 0;
+    uint64_t start = get_time();
+    for (int i = 0; i < iters; ++i) {
+      dep = arr[dep];
+    }
+    uint64_t end = get_time();
+    return end - start;
   }
-  uint64_t end = get_time();
-  return end - start;
-}
   `
   return (
     <SyntaxHighlighter language={"cpp"}>
