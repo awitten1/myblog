@@ -2,10 +2,9 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
-#include <numeric>
+#include <cstdlib>
 #include <pthread.h>
-#include <random>
-#include <vector>
+#include "setup.h"
 
 #include "apple_arm_events.h"
 
@@ -14,44 +13,17 @@ namespace {
 AppleEvents g_events;
 bool g_use_kperf = false;
 
-constexpr std::size_t kArraySizeBytes = 1 << 15;
-constexpr int kStride = 32 / sizeof(int);
-constexpr int kMinIters = 10;
-constexpr int kMaxIters = 1000;
-constexpr int kIterStep = 10;
-constexpr int kReps = 1000;
+const size_t kArraySizeBytes = 1 << 15;
+const int kMinIters = 10;
+const int kMaxIters = 1000;
+const int kIterStep = 10;
+const int kReps = 100;
 
 enum class AccessPattern {
   kRandom,
   kStrided,
   kSaRv,
 };
-
-__attribute__((noinline))
-void init_random_array(int* arr, int array_size) {
-  std::iota(arr, arr + array_size, 0);
-
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::shuffle(arr, arr + array_size, gen);
-}
-
-__attribute__((noinline))
-void init_strided_array(int* arr, int array_sz) {
-  for (std::size_t i = 0; i < array_sz; i+=kStride) {
-    arr[i] = i + kStride;
-  }
-}
-
-__attribute__((noinline))
-void init_sa_rv_array(int* arr, int array_size) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> dist(1, 128);
-  for (std::size_t i = 0; i < array_size; ++i) {
-    arr[i] = dist(gen) * kStride;
-  }
-}
 
 const char* access_pattern_name(AccessPattern pattern) {
   switch (pattern) {
@@ -72,7 +44,6 @@ uint64_t get_time() {
     (std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-__attribute__((noinline))
 uint64_t measure_chase(volatile int* arr, int iters) {
   volatile int dep = 0;
   for (int i = 0; i < iters; ++i) {
@@ -88,7 +59,6 @@ uint64_t measure_chase(volatile int* arr, int iters) {
   return end - start;
 }
 
-__attribute__((noinline))
 uint64_t measure_sa_rv(volatile int* arr, int iters) {
   volatile int dep = 0;
   for (int i = 0; i < iters; ++i) {
@@ -106,7 +76,24 @@ uint64_t measure_sa_rv(volatile int* arr, int iters) {
   return end - start;
 }
 
-void run(AccessPattern pattern, const char* unit, const char* core_kind) {
+uint64_t measure_inc(volatile int* arr, int iters) {
+  volatile int dep = 0;
+  for (int i = 0; i < iters; ++i) {
+    const int v = arr[dep];
+    dep += v;
+  }
+
+  dep = 0;
+  auto start = get_time();
+  for (int i = 0; i < iters; ++i) {
+    const int v = arr[dep];
+    dep += v;
+  }
+  auto end = get_time();
+  return end - start;
+}
+
+void run(AccessPattern pattern, const char* unit, const char* core_kind, bool write) {
   const auto array_size = kArraySizeBytes / sizeof(int);
   int* arr = new int[array_size];
 
@@ -136,17 +123,21 @@ void run(AccessPattern pattern, const char* unit, const char* core_kind) {
     std::vector<uint64_t> sorted = samples;
     std::sort(sorted.begin(), sorted.end());
     const uint64_t median_s = sorted[sorted.size() / 2];
-    std::printf("%s,%s,%d,%llu,%s\n",
-                access_pattern_name(pattern),
-                core_kind,
-                iters,
-                static_cast<unsigned long long>(median_s),
-                unit);
-    std::fflush(stdout);
+    if (write) {
+      std::printf("%s,%s,%d,%llu,%s\n",
+                  access_pattern_name(pattern),
+                  core_kind,
+                  iters,
+                  static_cast<unsigned long long>(median_s),
+                  unit);
+      std::fflush(stdout);
+    }
   }
+
+  delete[] arr;
 }
 
-}  // namespace
+}
 
 int main() {
   g_use_kperf = g_events.setup_performance_counters();
@@ -154,14 +145,23 @@ int main() {
   std::fprintf(stderr, "timing unit: %s\n", unit);
   std::printf("pattern,core_kind,iters,median,unit\n");
 
-  pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
-  run(AccessPattern::kStrided, unit, "ecore");
-  run(AccessPattern::kRandom, unit, "ecore");
-  run(AccessPattern::kSaRv, unit, "ecore");
+  if (pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0) != 0) {
+    fprintf(stderr, "failed to set qos class\n");
+    exit(EXIT_FAILURE);
+  }
+  run(AccessPattern::kStrided, unit, "ecore", true);
+  run(AccessPattern::kRandom, unit, "ecore", true);
+  run(AccessPattern::kSaRv, unit, "ecore", true);
 
-  pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
-  run(AccessPattern::kStrided, unit, "pcore");
-  run(AccessPattern::kRandom, unit, "pcore");
-  run(AccessPattern::kSaRv, unit, "pcore");
+  if (pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0) != 0) {
+    fprintf(stderr, "failed to set qos class\n");
+    exit(EXIT_FAILURE);
+  }
+  run(AccessPattern::kSaRv, unit, "pcore", false);
+  run(AccessPattern::kSaRv, unit, "pcore", true);
+  run(AccessPattern::kStrided, unit, "pcore", false);
+  run(AccessPattern::kStrided, unit, "pcore", true);
+  run(AccessPattern::kRandom, unit, "pcore", false);
+  run(AccessPattern::kRandom, unit, "pcore", true);
   return 0;
 }
