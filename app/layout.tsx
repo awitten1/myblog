@@ -48,6 +48,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
+      data-theme="dark"
       className={cx(
         GeistSans.variable,
         GeistMono.variable
