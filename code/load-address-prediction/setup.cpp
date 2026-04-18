@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <random>
 
 extern const int kStride = 32 / sizeof(int);

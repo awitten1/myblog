@@ -3,19 +3,63 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+#if defined(__APPLE__)
 #include <pthread.h>
+#include "apple_arm_events.h"
+#elif defined(__linux__)
+#include <x86intrin.h>
+#include <sched.h>
+#endif
 
 #include "setup.h"
-#include "apple_arm_events.h"
-
-static AppleEvents g_events;
-static bool g_use_kperf = false;
 
 static const size_t kArraySizeBytes = 1 << 15;
 static const int kMinIters = 10;
 static const int kMaxIters = 1000;
 static const int kIterStep = 10;
-static const int kReps = 100;
+static const int kReps = 1000;
+
+class CounterSource {
+ public:
+  bool setup(void) {
+#if defined(__APPLE__)
+    use_cycles_ = apple_events_.setup_performance_counters();
+    return use_cycles_;
+#elif defined(__linux__)
+    use_cycles_ = true;
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  const char* unit(void) const {
+    return use_cycles_ ? "cycles" : "ns";
+  }
+
+  uint64_t now(void) {
+#if defined(__APPLE__)
+    if (use_cycles_) {
+      return static_cast<uint64_t>(apple_events_.get_counters().cycles);
+    }
+#elif defined(__linux__)
+    if (use_cycles_) {
+      return __rdtsc();
+    }
+#endif
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<uint64_t>(ts.tv_sec) * 1000000000ull +
+           static_cast<uint64_t>(ts.tv_nsec);
+  }
+
+ private:
+  bool use_cycles_ = false;
+#if defined(__APPLE__)
+  AppleEvents apple_events_;
+#endif
+};
 
 enum AccessPattern {
   PATTERN_RANDOM,
@@ -32,37 +76,44 @@ static const char* access_pattern_name(enum AccessPattern pattern) {
   return "unknown";
 }
 
+static const char* default_core_kind_name(void) {
+#if defined(__linux__) && defined(__x86_64__)
+  return "amd64";
+#elif defined(__linux__)
+  return "linux";
+#else
+  return "generic";
+#endif
+}
+
 static int current_cpu(void) {
+#if defined(__APPLE__)
   size_t cpu = 0;
   pthread_cpu_number_np(&cpu);
-  return (int)cpu;
+  return static_cast<int>(cpu);
+#elif defined(__linux__)
+  return sched_getcpu();
+#else
+  return -1;
+#endif
 }
 
-static uint64_t get_time(void) {
-  if (g_use_kperf) {
-    return (uint64_t)g_events.get_counters().cycles;
-  }
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
-}
-
-static uint64_t time_chase(volatile int* arr, int iters) {
+static uint64_t time_chase(CounterSource* counter, volatile int* arr, int iters) {
   volatile int dep = 0;
   for (int i = 0; i < iters; ++i) {
     dep = arr[dep];
   }
 
   dep = 0;
-  uint64_t start = get_time();
+  uint64_t start = counter->now();
   for (int i = 0; i < iters; ++i) {
     dep = arr[dep];
   }
-  uint64_t end = get_time();
+  uint64_t end = counter->now();
   return end - start;
 }
 
-static uint64_t time_sa_rv(volatile int* arr, int iters) {
+static uint64_t time_sa_rv(CounterSource* counter, volatile int* arr, int iters) {
   volatile int dep = 0;
   for (int i = 0; i < iters; ++i) {
     const int v = arr[dep];
@@ -70,16 +121,16 @@ static uint64_t time_sa_rv(volatile int* arr, int iters) {
   }
 
   dep = 0;
-  uint64_t start = get_time();
+  uint64_t start = counter->now();
   for (int i = 0; i < iters; ++i) {
     const int v = arr[dep];
     dep += v < kStride ? v : kStride;
   }
-  uint64_t end = get_time();
+  uint64_t end = counter->now();
   return end - start;
 }
 
-static void run(enum AccessPattern pattern, const char* unit,
+static void run(CounterSource* counter, enum AccessPattern pattern,
                 const char* core_kind, bool write) {
   const size_t array_size = kArraySizeBytes / sizeof(int);
   int* arr = new int[array_size];
@@ -96,9 +147,9 @@ static void run(enum AccessPattern pattern, const char* unit,
     int cpu = current_cpu();
     for (int r = 0; r < kReps; ++r) {
       if (pattern == PATTERN_SA_RV) {
-        samples[r] = time_sa_rv(arr, iters);
+        samples[r] = time_sa_rv(counter, arr, iters);
       } else {
-        samples[r] = time_chase(arr, iters);
+        samples[r] = time_chase(counter, arr, iters);
       }
     }
     std::sort(samples, samples + kReps);
@@ -110,7 +161,7 @@ static void run(enum AccessPattern pattern, const char* unit,
              cpu,
              iters,
              (unsigned long long)median_s,
-             unit);
+             counter->unit());
       fflush(stdout);
     }
   }
@@ -119,32 +170,38 @@ static void run(enum AccessPattern pattern, const char* unit,
   delete[] arr;
 }
 
+static void run_suite(CounterSource* counter, const char* core_kind) {
+  run(counter, PATTERN_SA_RV,   core_kind, false);
+  run(counter, PATTERN_SA_RV,   core_kind, true);
+  run(counter, PATTERN_STRIDED, core_kind, false);
+  run(counter, PATTERN_STRIDED, core_kind, true);
+  run(counter, PATTERN_RANDOM,  core_kind, false);
+  run(counter, PATTERN_RANDOM,  core_kind, true);
+}
+
 int main(void) {
-  g_use_kperf = g_events.setup_performance_counters();
-  const char* unit = g_use_kperf ? "cycles" : "ns";
-  fprintf(stderr, "timing unit: %s\n", unit);
+  CounterSource counter;
+  const bool have_cycles = counter.setup();
+  fprintf(stderr, "timing unit: %s\n", counter.unit());
+  if (!have_cycles) {
+    fprintf(stderr, "cycle counter unavailable; falling back to CLOCK_MONOTONIC\n");
+  }
   printf("pattern,core_kind,cpu,iters,median,unit\n");
 
+#if defined(__APPLE__)
   if (pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0) != 0) {
     fprintf(stderr, "failed to set qos class\n");
-    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
   }
-  run(PATTERN_SA_RV,   unit, "ecore", false);
-  run(PATTERN_SA_RV,   unit, "ecore", true);
-  run(PATTERN_STRIDED, unit, "ecore", false);
-  run(PATTERN_STRIDED, unit, "ecore", true);
-  run(PATTERN_RANDOM,  unit, "ecore", false);
-  run(PATTERN_RANDOM,  unit, "ecore", true);
+  run_suite(&counter, "ecore");
 
   if (pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0) != 0) {
     fprintf(stderr, "failed to set qos class\n");
-    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
   }
-  run(PATTERN_SA_RV,   unit, "pcore", false);
-  run(PATTERN_SA_RV,   unit, "pcore", true);
-  run(PATTERN_STRIDED, unit, "pcore", false);
-  run(PATTERN_STRIDED, unit, "pcore", true);
-  run(PATTERN_RANDOM,  unit, "pcore", false);
-  run(PATTERN_RANDOM,  unit, "pcore", true);
+  run_suite(&counter, "pcore");
+#else
+  run_suite(&counter, default_core_kind_name());
+#endif
   return 0;
 }
