@@ -16,7 +16,7 @@ install_libpfm() {
     pushd $source_dir
     git clone --branch v4.13.0 https://github.com/wcohen/libpfm4.git
     pushd libpfm4
-    make PREFIX=$install_dir install
+    make CFLAGS=-std=gnu17 PREFIX=$install_dir install
     popd
     popd
 }
