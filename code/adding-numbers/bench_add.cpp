@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <random>
 #include <vector>
+#include <immintrin.h>
 
 static int64_t* mmap_data(size_t n) {
     int64_t* p = (int64_t*)mmap(nullptr, n * sizeof(int64_t),
@@ -34,14 +35,25 @@ int64_t add_integers(const int64_t* nums, size_t sz) {
     return ret;
 }
 
-extern "C" int64_t add_integers_asm(const int64_t* nums, size_t sz);
-extern "C" int64_t add_integers_asm_repeat(const int64_t* nums, size_t sz, size_t repeat);
+// extern "C" int64_t add_integers_asm(const int64_t* nums, size_t sz);
+// extern "C" int64_t add_integers_asm_repeat(const int64_t* nums, size_t sz, size_t repeat);
 
 __attribute__((noinline))
 __attribute__((target("avx2")))
 int64_t add_integers_cpp_repeat(const int64_t* nums, size_t sz, size_t repeat) {
     int64_t ret = 0;
-    for (size_t r = 0; r < repeat; ++r) {
+    for (size_t i = 0; i < repeat; ++i) {
+        ret += nums[i & (sz - 1)];
+    }
+    return ret;
+}
+
+__attribute__((noinline))
+__attribute__((target("avx2")))
+int64_t add_integers_cpp_repeat_avx2(const int64_t* nums, size_t sz, size_t total) {
+    int64_t ret = 0;
+    const size_t outer = total / sz;
+    for (size_t r = 0; r < outer; ++r) {
         for (size_t i = 0; i < sz; ++i) {
             ret += nums[i];
         }
@@ -59,14 +71,28 @@ int64_t add_integers_avx2(const int64_t* nums, size_t sz) {
     return ret;
 }
 
-static inline __attribute__((always_inline))
 __attribute__((target("avx2")))
-int64_t add_integers_avx2_inline(const int64_t* nums, size_t sz) {
-    int64_t ret = 0;
-    for (size_t i = 0; i < sz; ++i) {
-        ret += nums[i];
+int64_t add_integers_intrinc(const int64_t* nums, size_t sz) {
+    size_t i = 0;
+    __m256i acc = _mm256_setzero_si256();
+
+    for (; i + 3 < sz; i += 4) {
+        __m256i v = _mm256_load_si256((__m256i*)&nums[i]);
+        acc = _mm256_add_epi64(acc, v);
     }
-    return ret;
+
+    __m128i lo = _mm256_castsi256_si128(acc);
+    __m128i hi = _mm256_extracti128_si256(acc, 1);
+    __m128i sum128 = _mm_add_epi64(lo, hi);
+    __m128i shuffled = _mm_unpackhi_epi64(sum128, sum128);
+    __m128i total = _mm_add_epi64(sum128, shuffled);
+    int64_t result = _mm_cvtsi128_si64(total);
+
+    for (; i < sz; i++) {
+        result += nums[i];
+    }
+
+    return result;
 }
 
 __attribute__((noinline))
@@ -88,7 +114,7 @@ static void IntegerSumLoop(benchmark::State& state) {
     state.SetItemsProcessed(state.iterations() * state.range(0));
     state.counters["size"] = state.range(0);
 }
-BENCHMARK(IntegerSumLoop)->Range(1 << 10, 1 << 20);
+BENCHMARK(IntegerSumLoop)->Range(1 << 10, 1 << 24);
 
 static void IntegerSumLoopAvx2(benchmark::State& state) {
     const auto nums = make_data(state.range(0));
@@ -101,53 +127,6 @@ static void IntegerSumLoopAvx2(benchmark::State& state) {
 }
 BENCHMARK(IntegerSumLoopAvx2)->Range(1 << 10, 1 << 24);
 
-static void IntegerSumLoopAsm(benchmark::State& state) {
-    const auto nums = make_data(state.range(0));
-    for (auto _ : state) {
-        int64_t sum = add_integers_asm(nums.data(), nums.size());
-        benchmark::DoNotOptimize(sum);
-    }
-    state.SetItemsProcessed(state.iterations() * state.range(0));
-    state.counters["size"] = state.range(0);
-}
-BENCHMARK(IntegerSumLoopAsm)->Range(1 << 10, 1 << 24);
-
-static void IntegerSumLoopAsmRepeat(benchmark::State& state) {
-    const auto nums = make_data(1024);
-    const size_t repeat = state.range(0);
-    for (auto _ : state) {
-        int64_t sum = add_integers_asm_repeat(nums.data(), nums.size(), repeat);
-        benchmark::DoNotOptimize(sum);
-    }
-    const size_t hot_iters_per_call = (1024 / 4) * repeat;
-    state.counters["hot_iters"] = hot_iters_per_call;
-}
-BENCHMARK(IntegerSumLoopAsmRepeat)->Arg(1)->Arg(10)->Arg(100)->Arg(1000)->Arg(10000);
-
-static void IntegerSumLoopAvx2Mmap(benchmark::State& state) {
-    size_t n = state.range(0);
-    int64_t* nums = mmap_data(n);
-    for (auto _ : state) {
-        int64_t sum = add_integers_avx2(nums, n);
-        benchmark::DoNotOptimize(sum);
-    }
-    state.SetItemsProcessed(state.iterations() * n);
-    state.counters["size"] = n;
-    munmap(nums, n * sizeof(int64_t));
-}
-BENCHMARK(IntegerSumLoopAvx2Mmap)->Range(1 << 10, 1 << 24);
-
-__attribute__((target("avx2")))
-static void IntegerSumLoopAvx2Inline(benchmark::State& state) {
-    const auto nums = make_data(state.range(0));
-    for (auto _ : state) {
-        int64_t sum = add_integers_avx2_inline(nums.data(), nums.size());
-        benchmark::DoNotOptimize(sum);
-    }
-    state.SetItemsProcessed(state.iterations() * state.range(0));
-    state.counters["size"] = state.range(0);
-}
-BENCHMARK(IntegerSumLoopAvx2Inline)->Range(1 << 10, 1 << 24);
 
 static void IntegerSumLoopAvx512(benchmark::State& state) {
     const auto nums = make_data(state.range(0));
@@ -159,5 +138,17 @@ static void IntegerSumLoopAvx512(benchmark::State& state) {
     state.counters["size"] = state.range(0);
 }
 BENCHMARK(IntegerSumLoopAvx512)->Range(1 << 10, 1 << 24);
+
+static void IntegerSumAvx2Intrin(benchmark::State& state) {
+    const auto nums = make_data(state.range(0));
+    for (auto _ : state) {
+        int64_t sum = add_integers_intrinc(nums.data(), nums.size());
+        benchmark::DoNotOptimize(sum);
+    }
+    state.SetItemsProcessed(state.iterations() * state.range(0));
+    state.counters["size"] = state.range(0);
+}
+BENCHMARK(IntegerSumAvx2Intrin)->Range(1 << 10, 1 << 24);
+
 
 BENCHMARK_MAIN();
