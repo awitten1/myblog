@@ -4,9 +4,11 @@ publishedAt: '2026-04-18'
 summary: 'Discussing LAP'
 ---
 
-*This blog is based on a paper from Georgia Tech called [SLAP](https://predictors.fail/files/SLAP.pdf).*
-
 *The code for this blog can be found [here](https://github.com/awitten1/myblog/tree/main/code/load-address-prediction).*
+
+This post reproduces the load address prediction experiments from section 4.1-4.2 of the [SLAP](https://predictors.fail/files/SLAP.pdf) paper.
+First we give necessary background, then we describe and reproduce their experiments.
+
 
 ## Contents
 
@@ -144,7 +146,7 @@ This is already suggestive, but it does not yet distinguish *address* prediction
 prediction. In the strided case the loaded values are highly regular as well as the addresses, so
 either mechanism could explain the speedup.
 
-To distinguish the two, we design a different experiment.  In this experiment, we populate
+To distinguish the two, the paper designs a different experiment.  In this experiment, we populate
 the array with random values in the range `[stride,array_size)`.  We then execute the following code:
 
 {
